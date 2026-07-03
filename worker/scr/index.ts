@@ -19,7 +19,7 @@ const app = new Hono<{ Bindings: Env }>()
 // ─── Middlewares globales ─────────────────────────────────────
 app.use('*', logger())
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'https://arrendia.pages.dev'],
+  origin: ['http://localhost:5173', 'https://arrendiademo.pages.dev'],
   allowHeaders: ['Content-Type', 'Authorization'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
