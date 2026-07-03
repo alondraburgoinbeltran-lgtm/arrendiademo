@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding     = "DB"
 database_name = "arrendiademo-db"
-database_id   = "PENDIENTE"
+database_id   = "ce1f2c04-4ae7-4e58-ab7e-b2b447512da3"
 
 [[r2_buckets]]
 binding     = "BUCKET"
