@@ -1,0 +1,26 @@
+name = "arrendia-worker"
+main = "src/index.ts"
+compatibility_date = "2024-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding     = "DB"
+database_name = "arrendia-db"
+database_id   = "186f1cd1-3c82-4132-9b46-99158a97ea9f"
+
+[[r2_buckets]]
+binding     = "BUCKET"
+bucket_name = "arrendia-files"
+
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets (configurar con: wrangler secret put NOMBRE)
+# JWT_SECRET
+# AUTH_USER_1      (usuario socio 1)
+# AUTH_PASS_1      (contraseña socio 1)
+# AUTH_USER_2      (usuario socio 2)
+# AUTH_PASS_2      (contraseña socio 2)
+
+[triggers]
+crons = ["0 6 1 * *"]   # día 1 de cada mes a las 00:00 CST (06:00 UTC)
