@@ -127,37 +127,41 @@ function CobranzaPage() {
       />
 
       {/* Barra de progreso */}
-      <div className="bg-primary-500 px-4 pb-4">
-        <div className="flex justify-between text-xs mb-1.5">
-          <span className="text-white/70">Progreso del mes</span>
-          <span className="text-accent-DEFAULT font-medium">{summary.paid} de {summary.count} cobradas</span>
-        </div>
-        <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-          <div className="h-full bg-accent-DEFAULT rounded-full transition-all" style={{ width: `${Math.max(progress, 3)}%` }} />
-        </div>
-        <div className="flex justify-between mt-1.5">
-          <span className="text-white text-xs font-medium">{formatCurrency(summary.collected)} cobrado</span>
-          <span className="text-white/60 text-xs">falta {formatCurrency(summary.total - summary.collected)}</span>
+      <div className="bg-primary-500 px-4 pb-4 lg:px-8 xl:px-10 lg:pb-6">
+        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
+          <div className="flex justify-between text-xs lg:text-sm mb-1.5">
+            <span className="text-white/70">Progreso del mes</span>
+            <span className="text-accent-DEFAULT font-medium">{summary.paid} de {summary.count} cobradas</span>
+          </div>
+          <div className="h-1.5 lg:h-2 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full bg-accent-DEFAULT rounded-full transition-all" style={{ width: `${Math.max(progress, 3)}%` }} />
+          </div>
+          <div className="flex justify-between mt-1.5">
+            <span className="text-white text-xs lg:text-sm font-medium">{formatCurrency(summary.collected)} cobrado</span>
+            <span className="text-white/60 text-xs lg:text-sm">falta {formatCurrency(summary.total - summary.collected)}</span>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-white border-b border-[#E8E5DF]">
-        {([
-          { key: 'all',     label: `Todas (${summary.count})` },
-          { key: 'pending', label: `Pendientes (${summary.pending})` },
-          { key: 'paid',    label: `Pagadas (${summary.paid})` },
-        ] as { key: 'all' | 'pending' | 'paid'; label: string }[]).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-colors ${
-              tab === t.key ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-400'
-            }`}
-          >{t.label}</button>
-        ))}
+      <div className="flex bg-white border-b border-[#E8E5DF] lg:px-8 xl:px-10">
+        <div className="flex flex-1 lg:flex-initial lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:w-full">
+          {([
+            { key: 'all',     label: `Todas (${summary.count})` },
+            { key: 'pending', label: `Pendientes (${summary.pending})` },
+            { key: 'paid',    label: `Pagadas (${summary.paid})` },
+          ] as { key: 'all' | 'pending' | 'paid'; label: string }[]).map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex-1 lg:flex-initial lg:px-6 py-2.5 lg:py-3.5 text-xs lg:text-sm font-medium border-b-2 transition-colors ${
+                tab === t.key ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-400'
+              }`}
+            >{t.label}</button>
+          ))}
+        </div>
       </div>
 
-      {/* Lista */}
-      <div className="px-4 py-3 flex flex-col gap-2.5">
+      {/* Lista — tarjetas en móvil */}
+      <div className="px-4 py-3 flex flex-col gap-2.5 lg:hidden">
         {isLoading && <div className="py-12 text-center text-sm text-gray-400">Cargando...</div>}
         {!isLoading && rents.length === 0 && (
           <div className="py-12 flex flex-col items-center gap-3">
@@ -188,6 +192,42 @@ function CobranzaPage() {
             onDelete={() => setConfirmRent(r)}
           />
         ))}
+      </div>
+
+      {/* Lista — tabla en escritorio */}
+      <div className="hidden lg:block lg:px-8 xl:px-10 lg:py-6">
+        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
+          {isLoading && <div className="py-12 text-center text-sm text-gray-400">Cargando...</div>}
+          {!isLoading && rents.length === 0 && (
+            <div className="py-16 flex flex-col items-center gap-3 bg-white border border-[#E8E5DF] rounded-2xl">
+              <p className="text-sm text-gray-400">No hay rentas generadas este mes</p>
+              <button
+                onClick={async () => {
+                  const token = sessionStorage.getItem('arrendia_token')
+                  const res = await fetch(
+                    `${import.meta.env.VITE_API_URL}/api/dashboard/generate-rents?month=${month}&year=${year}`,
+                    { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
+                  )
+                  const data = await res.json()
+                  alert(`${data.generated} rentas generadas`)
+                }}
+                className="btn-primary px-6"
+              >
+                Generar rentas de este mes
+              </button>
+            </div>
+          )}
+          {!isLoading && rents.length > 0 && filtered.length === 0 && (
+            <div className="py-12 text-center text-sm text-gray-400">Sin resultados</div>
+          )}
+          {!isLoading && filtered.length > 0 && (
+            <RentTable rents={filtered}
+              onPay={openPay}
+              onUnpay={id => unpayMutation.mutateAsync(id)}
+              onDelete={setConfirmRent}
+            />
+          )}
+        </div>
       </div>
 
       {/* Sheet registrar pago */}
@@ -303,6 +343,102 @@ function RentCard({ rent: r, onPay, onUnpay, onDelete }: {
           <Trash2 size={14} />
         </button>
       </div>
+    </div>
+  )
+}
+
+// ─── Tabla de rentas (escritorio) ──────────────────────────────
+
+function RentTable({ rents, onPay, onUnpay, onDelete }: {
+  rents: Rent[]
+  onPay: (r: Rent) => void; onUnpay: (id: number) => void; onDelete: (r: Rent) => void
+}) {
+  const [logoBase64, setLogoBase64] = useState<string>('')
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      setLogoBase64(canvas.toDataURL('image/png'))
+    }
+    img.src = `${window.location.origin}/logo.png`
+  }, [])
+
+  async function handleDownload(r: Rent) {
+    setDownloadingId(r.id)
+    try {
+      generateReceiptPDF(r, logoBase64)
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
+  return (
+    <div className="bg-white border border-[#E8E5DF] rounded-2xl overflow-hidden">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-[#E8E5DF] bg-[#FAF8F4]">
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Propiedad</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Inquilino</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Día pago</th>
+            <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Monto</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Estatus</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Método pago</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Cuenta</th>
+            <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rents.map(r => {
+            const isPaid = r.status === 'paid'
+            const propLabel = `${r.property_name}${r.property_number ? ` #${r.property_number}` : ''}`
+            return (
+              <tr key={r.id} className="border-b border-[#F0EDE7] last:border-0 transition-colors hover:bg-[#FAF8F4]">
+                <td className="px-5 py-3.5 text-sm font-medium text-[#1A1A1A]">{propLabel}</td>
+                <td className="px-5 py-3.5 text-sm text-gray-600">{r.tenant_name ?? '—'}</td>
+                <td className="px-5 py-3.5 text-sm text-gray-600">{(r as any).payment_day ? `Día ${(r as any).payment_day}` : '—'}</td>
+                <td className="px-5 py-3.5 text-sm font-semibold text-[#1A1A1A] text-right">{formatCurrency(r.amount)}</td>
+                <td className="px-5 py-3.5"><StatusChip status={r.status} /></td>
+                <td className="px-5 py-3.5 text-sm text-gray-600 capitalize">{isPaid ? (r.payment_method ?? '—') : '—'}</td>
+                <td className="px-5 py-3.5 text-sm text-gray-600 uppercase">{isPaid && r.payment_method === 'transferencia' ? (r.bank_account ?? '—') : '—'}</td>
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {!isPaid && (
+                      <button onClick={() => onPay(r)}
+                        className="bg-primary-500 text-white text-xs font-medium rounded-lg px-3 py-1.5 transition-all duration-200 hover:-translate-y-[1px]">
+                        Marcar pagado
+                      </button>
+                    )}
+                    {isPaid && (
+                      <button onClick={() => handleDownload(r)} disabled={downloadingId === r.id}
+                        className="flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-medium rounded-lg px-3 py-1.5 border border-green-200 transition-all duration-200 hover:-translate-y-[1px] disabled:opacity-50">
+                        <FileText size={12} />
+                        PDF
+                      </button>
+                    )}
+                    {isPaid && (
+                      <button onClick={() => onUnpay(r.id)} title="Revertir pago"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-gray-50 transition-all duration-200 hover:-translate-y-[1px]">
+                        <RotateCcw size={14} />
+                      </button>
+                    )}
+                    <button onClick={() => onDelete(r)} title="Eliminar"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all duration-200 hover:-translate-y-[1px]">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }
