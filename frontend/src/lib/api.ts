@@ -23,7 +23,7 @@ async function request<T>(
   })
 
   if (res.status === 401) {
-    localStorage.removeItem('arrendia_token')
+    sessionStorage.removeItem('arrendia_token')
     window.location.href = '/login'
     throw new ApiError(401, 'No autorizado')
   }
