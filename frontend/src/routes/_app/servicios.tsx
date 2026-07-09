@@ -131,54 +131,58 @@ function ServiciosPage() {
       />
 
       {services.length > 0 && (
-        <div className="bg-primary-500 px-4 pb-3 grid grid-cols-2 gap-2">
-          <div className="bg-white/10 rounded-xl px-3 py-2.5">
-            <p className="text-white/60 text-[10px]">Pagado</p>
-            <p className="text-white font-bold text-base">{formatCurrency(totalPagado)}</p>
-          </div>
-          <div className="bg-white/10 rounded-xl px-3 py-2.5">
-            <p className="text-white/60 text-[10px]">Pendiente de pago</p>
-            <p className="text-amber-300 font-bold text-base">{formatCurrency(totalPendiente)}</p>
+        <div className="bg-primary-500 px-4 pb-3 lg:px-8 xl:px-10 lg:pb-5">
+          <div className="grid grid-cols-2 gap-2 lg:gap-4 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
+            <div className="bg-white/10 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-5 lg:py-4">
+              <p className="text-white/60 text-[10px] lg:text-sm">Pagado</p>
+              <p className="text-white font-bold text-base lg:text-2xl">{formatCurrency(totalPagado)}</p>
+            </div>
+            <div className="bg-white/10 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-5 lg:py-4">
+              <p className="text-white/60 text-[10px] lg:text-sm">Pendiente de pago</p>
+              <p className="text-amber-300 font-bold text-base lg:text-2xl">{formatCurrency(totalPendiente)}</p>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="px-4 py-3 flex flex-col gap-3">
+      <div className="px-4 py-3 flex flex-col gap-3 lg:px-8 xl:px-10 lg:py-6 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
 
         {/* Excedentes luz pendientes */}
         {excedentesPendientes.length > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
-            <div className="px-3 py-2.5 flex items-center gap-2 border-b border-amber-200">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl lg:rounded-2xl overflow-hidden">
+            <div className="px-3 py-2.5 lg:px-5 lg:py-3.5 flex items-center gap-2 border-b border-amber-200">
               <Zap size={14} className="text-amber-600" />
-              <span className="text-xs font-bold text-amber-800">Excedente luz por cobrar</span>
+              <span className="text-xs lg:text-sm font-bold text-amber-800">Excedente luz por cobrar</span>
               <span className="ml-auto text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{excedentesPendientes.length}</span>
             </div>
+            <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3">
             {excedentesPendientes.map((s: any) => (
-              <div key={s.id} className="px-3 py-2.5 flex items-center justify-between border-b border-amber-100 last:border-0 bg-white">
+              <div key={s.id} className="px-3 py-2.5 lg:px-5 lg:py-3 flex items-center justify-between border-b border-amber-100 last:border-0 bg-white">
                 <div>
-                  <p className="text-xs font-semibold text-[#1A1A1A]">
+                  <p className="text-xs lg:text-sm font-semibold text-[#1A1A1A]">
                     {s.property_name}{(s as any).property_number ? ` #${(s as any).property_number}` : ''}
                   </p>
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] lg:text-xs text-gray-400">
                     Total: {formatCurrency(s.amount)} · Excedente: <span className="text-amber-600 font-semibold">{formatCurrency(s.excedente)}</span>
                   </p>
                 </div>
                 <button
                   onClick={() => excedenteMutation.mutate(s.id)}
                   disabled={excedenteMutation.isPending}
-                  className="text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200 px-2.5 py-1 rounded-lg active:scale-95 disabled:opacity-50"
+                  className="text-[10px] lg:text-xs font-semibold bg-green-100 text-green-700 border border-green-200 px-2.5 py-1 rounded-lg active:scale-95 disabled:opacity-50 shrink-0 ml-2"
                 >
                   Cobrado ✓
                 </button>
               </div>
             ))}
+            </div>
           </div>
         )}
 
         {/* Gráfica por tipo */}
         {chartData.length > 0 && (
-          <div className="bg-white border border-[#E8E5DF] rounded-xl p-4">
-            <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-3">Por tipo de servicio</p>
+          <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-4 lg:p-5">
+            <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] uppercase tracking-wider mb-3">Por tipo de servicio</p>
             <ResponsiveContainer width="100%" height={120}>
               <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#888' }} axisLine={false} tickLine={false} />
@@ -197,9 +201,19 @@ function ServiciosPage() {
           <div className="py-12 text-center text-sm text-gray-400">No hay servicios registrados este mes</div>
         )}
 
-        {services.map((sv: any) => (
-          <ServiceCard key={sv.id} service={sv} onEdit={() => openEdit(sv)} onDelete={() => setConfirmId(sv.id)} />
-        ))}
+        {/* Móvil — tarjetas */}
+        <div className="flex flex-col gap-3 lg:hidden">
+          {services.map((sv: any) => (
+            <ServiceCard key={sv.id} service={sv} onEdit={() => openEdit(sv)} onDelete={() => setConfirmId(sv.id)} />
+          ))}
+        </div>
+
+        {/* Escritorio — tabla */}
+        {!isLoading && services.length > 0 && (
+          <div className="hidden lg:block">
+            <ServiceTable services={services} onEdit={openEdit} onDelete={(sv: any) => setConfirmId(sv.id)} />
+          </div>
+        )}
       </div>
 
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={editing ? 'Editar servicio' : 'Registrar servicio'}>
@@ -266,6 +280,68 @@ function ServiceCard({ service: sv, onEdit, onDelete }: {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ServiceTable({ services, onEdit, onDelete }: {
+  services: any[]; onEdit: (sv: any) => void; onDelete: (sv: any) => void
+}) {
+  return (
+    <div className="bg-white border border-[#E8E5DF] rounded-2xl overflow-hidden">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-[#E8E5DF] bg-[#FAF8F4]">
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Servicio</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Propiedad</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Periodo</th>
+            <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Monto</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Estado</th>
+            <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {services.map((sv: any) => {
+            const stype = SERVICE_TYPES.find(t => t.value === sv.service_type) ?? SERVICE_TYPES[4]
+            const isPagado = sv.status === 'pagado'
+            return (
+              <tr key={sv.id} className="border-b border-[#F0EDE7] last:border-0 transition-colors hover:bg-[#FAF8F4]">
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${stype.bg}`}>
+                      <stype.Icon size={14} className={stype.color} />
+                    </div>
+                    <span className="text-sm font-medium text-[#1A1A1A]">{stype.label}</span>
+                    {sv.excedente > 0 && (
+                      <span className="text-[10px] text-amber-600 font-medium">+{formatCurrency(sv.excedente)} exc.</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-5 py-3.5 text-sm text-gray-600">{sv.property_name}{sv.property_number ? ` #${sv.property_number}` : ''}</td>
+                <td className="px-5 py-3.5 text-sm text-gray-600">{formatDate(sv.paid_at)}</td>
+                <td className="px-5 py-3.5 text-sm font-semibold text-[#1A1A1A] text-right">{formatCurrency(sv.amount)}</td>
+                <td className="px-5 py-3.5">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isPagado ? 'text-green-700 bg-green-50' : 'text-amber-700 bg-amber-50'}`}>
+                    {isPagado ? 'Pagado' : 'Pendiente'}
+                  </span>
+                </td>
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button onClick={() => onEdit(sv)} title="Editar"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-gray-50 transition-all duration-200 hover:-translate-y-[1px]">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => onDelete(sv)} title="Eliminar"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all duration-200 hover:-translate-y-[1px]">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }
