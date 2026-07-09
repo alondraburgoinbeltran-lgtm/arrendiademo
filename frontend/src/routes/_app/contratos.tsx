@@ -232,7 +232,18 @@ function ContractFormComp({ form, onChange, onSubmit, onCancel, saving, properti
       <div>
         <label className="label">Propiedad</label>
         <select className="input-base" value={form.property_id || ''}
-          onChange={e => onChange({ ...form, property_id: Number(e.target.value) })}
+          onChange={e => {
+            const id = Number(e.target.value)
+            const selected = properties.find(p => p.id === id)
+            onChange({
+              ...form,
+              property_id: id,
+              // Autocompletar desde la propiedad seleccionada
+              tenant_name:  selected?.tenant_name  ?? '',
+              tenant_phone: selected?.tenant_phone ?? '',
+              start_date:   selected?.start_date   ?? '',
+            })
+          }}
           required
         >
           <option value="">Seleccionar propiedad...</option>
@@ -242,6 +253,11 @@ function ContractFormComp({ form, onChange, onSubmit, onCancel, saving, properti
             </option>
           ))}
         </select>
+        {form.property_id > 0 && (
+          <p className="text-[10px] text-gray-400 mt-1">
+            Inquilino, teléfono y fecha de inicio se autocompletaron desde la propiedad. Puedes editarlos si es necesario.
+          </p>
+        )}
       </div>
       <div>
         <label className="label">Nombre del inquilino</label>
