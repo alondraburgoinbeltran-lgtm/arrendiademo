@@ -107,22 +107,24 @@ function ContratosPage() {
         }
       />
 
-      <div className="flex bg-white border-b border-[#E8E5DF]">
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-colors ${
-              tab === t.key ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-400'
-            }`}
-          >
-            {t.label} ({t.count})
-          </button>
-        ))}
+      <div className="flex bg-white border-b border-[#E8E5DF] lg:px-8 xl:px-10">
+        <div className="flex flex-1 lg:flex-initial lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:w-full">
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex-1 lg:flex-initial lg:px-6 py-2.5 lg:py-3.5 text-xs lg:text-sm font-medium border-b-2 transition-colors ${
+                tab === t.key ? 'border-primary-500 text-primary-500' : 'border-transparent text-gray-400'
+              }`}
+            >
+              {t.label} ({t.count})
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="px-4 py-3 flex flex-col gap-3">
-        {isLoading && <div className="py-12 text-center text-sm text-gray-400">Cargando...</div>}
+      <div className="px-4 py-3 flex flex-col gap-3 lg:px-8 xl:px-10 lg:py-6 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4 xl:gap-5 lg:items-start">
+        {isLoading && <div className="py-12 text-center text-sm text-gray-400 lg:col-span-full">Cargando...</div>}
         {!isLoading && filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-400">No hay contratos en esta categoría</div>
+          <div className="py-12 text-center text-sm text-gray-400 lg:col-span-full">No hay contratos en esta categoría</div>
         )}
         {filtered.map(c => (
           <ContractCard key={c.id} contract={c} onEdit={() => openEdit(c)} onDelete={() => setConfirmId(c.id)} />
@@ -159,7 +161,7 @@ function ContractCard({ contract: c, onEdit, onDelete }: {
   const propType = (c as any).property_type
 
   return (
-    <div className={`bg-white border rounded-xl p-4 flex flex-col gap-3 ${
+    <div className={`bg-white border rounded-xl lg:rounded-2xl p-4 lg:p-5 flex flex-col gap-3 lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px] ${
       expired ? 'border-red-200' : soon ? 'border-amber-300' : 'border-[#E8E5DF]'
     }`}>
       {soon && !expired && (
