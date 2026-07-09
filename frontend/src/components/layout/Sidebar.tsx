@@ -47,24 +47,24 @@ export function Sidebar() {
     <aside
       className={cn(
         'hidden md:flex flex-col h-screen sticky top-0 bg-white border-r border-[#E8E5DF] transition-all duration-200 shrink-0',
-        collapsed ? 'w-16' : 'w-56'
+        collapsed ? 'w-16' : 'w-56 lg:w-[260px]'
       )}
     >
       {/* Logo */}
       <div className={cn(
-        'flex items-center h-16 border-b border-[#E8E5DF] px-4 shrink-0',
+        'flex items-center h-16 lg:h-[72px] border-b border-[#E8E5DF] px-4 lg:px-5 shrink-0',
         collapsed ? 'justify-center' : 'gap-3'
       )}>
         <img src="/logo.png" alt="Arrendia" className="w-8 h-8 object-contain shrink-0" />
         {!collapsed && (
-          <span className="text-[15px] font-semibold text-primary-500 tracking-tight">
+          <span className="text-[15px] lg:text-base font-semibold text-primary-500 tracking-tight">
             Arrendia
           </span>
         )}
       </div>
 
       {/* Nav items */}
-      <nav className="flex flex-col gap-0.5 p-2 flex-1 overflow-y-auto">
+      <nav className="flex flex-col gap-0.5 lg:gap-1 p-2 lg:p-3 flex-1 overflow-y-auto">
         {NAV_ITEMS.map(({ to, label, Icon }) => {
           const isActive = path.startsWith(to)
           return (
@@ -72,9 +72,9 @@ export function Sidebar() {
               key={to}
               to={to}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 lg:px-3.5 lg:py-2.5 text-sm transition-all duration-200 lg:hover:-translate-y-[1px]',
                 isActive
-                  ? 'bg-primary-50 text-primary-500 font-medium'
+                  ? 'bg-primary-50 text-primary-500 font-medium lg:bg-primary-100 lg:font-semibold'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                 collapsed && 'justify-center px-2'
               )}
@@ -129,3 +129,4 @@ export function Sidebar() {
   )
 }
      
+
