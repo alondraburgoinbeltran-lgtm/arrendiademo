@@ -31,7 +31,7 @@ function LoginPage() {
     <div
       className="relative min-h-dvh flex flex-col items-center justify-center gap-10 bg-cover px-6"
       style={{
-        backgroundImage: "url('/login-bg.jpg')",
+        backgroundImage: "url('/login-bg.png')",
         backgroundSize: '118%',
         backgroundPosition: 'center 45%',
       }}
