@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Sheet } from '@/components/ui/Sheet'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/useExpenses'
-import { formatCurrency, currentMonthYear, formatMonthYear } from '@/lib/utils'
+import { formatCurrency, formatDate, currentMonthYear, formatMonthYear } from '@/lib/utils'
 import type { Expense, ExpenseForm } from '@/types'
 
 export const Route = createFileRoute('/_app/gastos')({
@@ -90,7 +90,8 @@ function ExpensesPage() {
         }
       />
 
-      <div className="px-4 py-4 flex flex-col gap-4">
+      {/* Móvil — listas agrupadas */}
+      <div className="px-4 py-4 flex flex-col gap-4 lg:hidden">
         {isLoading && (
           <div className="py-16 text-center text-sm text-gray-400">Cargando...</div>
         )}
@@ -120,6 +121,24 @@ function ExpensesPage() {
             ))}
           </Section>
         )}
+      </div>
+
+      {/* Escritorio — tabla */}
+      <div className="hidden lg:block lg:px-8 xl:px-10 lg:py-6">
+        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
+          {isLoading && <div className="py-16 text-center text-sm text-gray-400">Cargando...</div>}
+          {!isLoading && expenses.length === 0 && (
+            <div className="py-16 text-center text-sm text-gray-400 bg-white border border-[#E8E5DF] rounded-2xl">
+              Sin gastos registrados este mes
+            </div>
+          )}
+          {!isLoading && expenses.length > 0 && (
+            <ExpenseTable expenses={expenses}
+              onEdit={openEdit}
+              onDelete={e => setConfirmId(e.id)}
+            />
+          )}
+        </div>
       </div>
 
       <Sheet
@@ -247,6 +266,56 @@ function Section({ title, icon, children }: {
       <div className="bg-white border border-[#E8E5DF] rounded-xl overflow-hidden">
         {children}
       </div>
+    </div>
+  )
+}
+
+function ExpenseTable({ expenses, onEdit, onDelete }: {
+  expenses: Expense[]; onEdit: (e: Expense) => void; onDelete: (e: Expense) => void
+}) {
+  return (
+    <div className="bg-white border border-[#E8E5DF] rounded-2xl overflow-hidden">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-[#E8E5DF] bg-[#FAF8F4]">
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Fecha</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Concepto</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Categoría</th>
+            <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Monto</th>
+            <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Estado</th>
+            <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {expenses.map(e => (
+            <tr key={e.id} className="border-b border-[#F0EDE7] last:border-0 transition-colors hover:bg-[#FAF8F4]">
+              <td className="px-5 py-3.5 text-sm text-gray-600">{e.created_at ? formatDate(e.created_at) : '—'}</td>
+              <td className="px-5 py-3.5 text-sm font-medium text-[#1A1A1A]">{e.type}</td>
+              <td className="px-5 py-3.5 text-sm text-gray-600">{e.is_recurring === 1 ? 'Fijo' : 'No fijo'}</td>
+              <td className="px-5 py-3.5 text-sm font-semibold text-[#1A1A1A] text-right">{formatCurrency(e.amount)}</td>
+              <td className="px-5 py-3.5">
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  e.status === 'paid' ? 'text-green-700 bg-green-50' : 'text-amber-700 bg-amber-50'
+                }`}>
+                  {e.status === 'paid' ? 'Pagado' : 'Pendiente'}
+                </span>
+              </td>
+              <td className="px-5 py-3.5">
+                <div className="flex items-center justify-end gap-1.5">
+                  <button onClick={() => onEdit(e)} title="Editar"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-gray-50 transition-all duration-200 hover:-translate-y-[1px]">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={() => onDelete(e)} title="Eliminar"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all duration-200 hover:-translate-y-[1px]">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
