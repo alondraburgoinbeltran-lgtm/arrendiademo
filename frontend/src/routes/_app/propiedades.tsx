@@ -126,25 +126,27 @@ function PropiedadesPage() {
         }
       />
 
-      <div className="bg-primary-500 px-4 pb-3 grid grid-cols-4 gap-2">
-        {[
-          { label: 'Total',     value: String(summary.total) },
-          { label: 'Activas',   value: String(summary.active) },
-          { label: 'Inactivas', value: String(summary.inactive) },
-          { label: 'Renta',     value: formatCurrency(summary.rent) },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-white/10 rounded-lg px-2 py-2 text-center">
-            <p className="text-white text-sm font-semibold leading-tight">{value}</p>
-            <p className="text-white/60 text-[9px] mt-0.5">{label}</p>
-          </div>
-        ))}
+      <div className="bg-primary-500 px-4 pb-3 lg:px-8 xl:px-10 lg:pb-5">
+        <div className="grid grid-cols-4 gap-2 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:gap-4">
+          {[
+            { label: 'Total',     value: String(summary.total) },
+            { label: 'Activas',   value: String(summary.active) },
+            { label: 'Inactivas', value: String(summary.inactive) },
+            { label: 'Renta',     value: formatCurrency(summary.rent) },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-white/10 rounded-lg lg:rounded-xl px-2 py-2 lg:px-4 lg:py-3 text-center">
+              <p className="text-white text-sm lg:text-2xl font-semibold leading-tight">{value}</p>
+              <p className="text-white/60 text-[9px] lg:text-xs mt-0.5">{label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="px-4 py-3">
-        <div className="flex items-center gap-2 bg-white border border-[#E8E5DF] rounded-xl px-3 py-2.5">
+      <div className="px-4 py-3 lg:px-8 xl:px-10 lg:py-5">
+        <div className="flex items-center gap-2 bg-white border border-[#E8E5DF] rounded-xl px-3 py-2.5 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:px-4 lg:py-3">
           <Search size={15} className="text-gray-400 shrink-0" />
           <input
-            className="flex-1 text-sm bg-transparent outline-none text-[#1A1A1A] placeholder:text-gray-400"
+            className="flex-1 text-sm lg:text-base bg-transparent outline-none text-[#1A1A1A] placeholder:text-gray-400"
             placeholder="Buscar propiedad o inquilino..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -152,10 +154,10 @@ function PropiedadesPage() {
         </div>
       </div>
 
-      <div className="px-4 pb-6 flex flex-col gap-3">
-        {isLoading && <div className="py-12 text-center text-sm text-gray-400">Cargando...</div>}
+      <div className="px-4 pb-6 flex flex-col gap-3 lg:px-8 xl:px-10 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4 xl:gap-5 lg:items-start">
+        {isLoading && <div className="py-12 text-center text-sm text-gray-400 lg:col-span-full">Cargando...</div>}
         {!isLoading && filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-400">
+          <div className="py-12 text-center text-sm text-gray-400 lg:col-span-full">
             {search ? 'Sin resultados' : 'No hay propiedades registradas aún'}
           </div>
         )}
@@ -198,11 +200,11 @@ function PropertyCard({ property: p, onEdit, onDelete, onToggle, onHistory, togg
 }) {
   const isActive = p.active === 1
   return (
-    <div className={`bg-white border border-[#E8E5DF] rounded-xl p-4 flex flex-col gap-3 ${!isActive ? 'opacity-60' : ''}`}>
+    <div className={`bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-4 lg:p-5 flex flex-col gap-3 lg:gap-3.5 lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px] ${!isActive ? 'opacity-60' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-[14px] font-semibold text-[#1A1A1A]">{p.name}</p>
-          <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">
+          <p className="text-[14px] lg:text-base font-semibold text-[#1A1A1A]">{p.name}</p>
+          <p className="text-[10px] lg:text-xs text-gray-400 mt-0.5 uppercase tracking-wide">
             {p.type}{p.number ? ` · #${p.number}` : ''}
           </p>
         </div>
@@ -211,7 +213,7 @@ function PropertyCard({ property: p, onEdit, onDelete, onToggle, onHistory, togg
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+      <div className="grid grid-cols-2 gap-y-2 gap-x-4 lg:gap-y-2.5">
         <InfoItem label="Renta mensual" value={formatCurrency(p.monthly_rent)} />
         <InfoItem label="Día de pago"   value={p.payment_day ? `Día ${p.payment_day}` : '—'} />
         <InfoItem label="Factura"        value={p.requires_invoice === 1 ? 'Sí' : 'No'} />
@@ -224,18 +226,18 @@ function PropertyCard({ property: p, onEdit, onDelete, onToggle, onHistory, togg
         <div className="flex items-center gap-2 min-w-0">
           {p.tenant_name ? (
             <>
-              <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                <span className="text-[9px] font-semibold text-blue-600">
+              <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                <span className="text-[9px] lg:text-[10px] font-semibold text-blue-600">
                   {p.tenant_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('')}
                 </span>
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-gray-700 truncate">{p.tenant_name}</p>
-                {p.tenant_phone && <p className="text-[10px] text-gray-400 truncate">{p.tenant_phone}</p>}
+                <p className="text-xs lg:text-sm text-gray-700 truncate">{p.tenant_name}</p>
+                {p.tenant_phone && <p className="text-[10px] lg:text-xs text-gray-400 truncate">{p.tenant_phone}</p>}
               </div>
             </>
           ) : (
-            <span className="text-xs text-gray-400">Sin inquilino</span>
+            <span className="text-xs lg:text-sm text-gray-400">Sin inquilino</span>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -326,8 +328,8 @@ function PropForm({ form, onChange, onSubmit, onCancel, saving }: {
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] text-gray-400">{label}</p>
-      <p className="text-xs font-medium text-[#1A1A1A] mt-0.5">{value}</p>
+      <p className="text-[10px] lg:text-xs text-gray-400">{label}</p>
+      <p className="text-xs lg:text-sm font-medium text-[#1A1A1A] mt-0.5">{value}</p>
     </div>
   )
 }
@@ -343,3 +345,4 @@ function ActionBtn({ onClick, title, children, danger, disabled }: {
     </button>
   )
 } 
+
