@@ -289,7 +289,7 @@ function ExpenseTable({ expenses, onEdit, onDelete }: {
         <tbody>
           {expenses.map(e => (
             <tr key={e.id} className="border-b border-[#F0EDE7] last:border-0 transition-colors hover:bg-[#FAF8F4]">
-              <td className="px-5 py-3.5 text-sm text-gray-600">{e.created_at ? formatDate(e.created_at) : '—'}</td>
+              <td className="px-5 py-3.5 text-sm text-gray-600">{e.created_at ? formatDate(e.created_at.slice(0, 10)) : '—'}</td>
               <td className="px-5 py-3.5 text-sm font-medium text-[#1A1A1A]">{e.type}</td>
               <td className="px-5 py-3.5 text-sm text-gray-600">{e.is_recurring === 1 ? 'Fijo' : 'No fijo'}</td>
               <td className="px-5 py-3.5 text-sm font-semibold text-[#1A1A1A] text-right">{formatCurrency(e.amount)}</td>
