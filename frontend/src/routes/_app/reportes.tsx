@@ -22,3 +22,4 @@ export const Route = createFileRoute('/_app/reportes')({
       </div>
     </div>
   ),
+})
