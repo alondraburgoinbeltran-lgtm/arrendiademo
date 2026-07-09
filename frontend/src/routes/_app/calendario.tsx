@@ -115,23 +115,23 @@ function CalendarioPage() {
         }
       />
 
-      <div className="px-4 py-4 flex flex-col gap-4">
-        {isLoading && <div className="py-16 text-center text-sm text-gray-400">Cargando...</div>}
+      <div className="px-4 py-4 flex flex-col gap-4 lg:px-8 xl:px-10 lg:py-6 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:grid lg:grid-cols-10 lg:gap-5 xl:gap-6 lg:items-start">
+        {isLoading && <div className="py-16 text-center text-sm text-gray-400 lg:col-span-10">Cargando...</div>}
 
-        {/* Notas fijas */}
+        {/* Notas fijas — 30% a la derecha en escritorio */}
         {(data?.notes ?? []).length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 lg:col-span-3 lg:order-2 lg:sticky lg:top-6">
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider">Notas</p>
+              <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] uppercase tracking-wider">Notas</p>
               <button onClick={() => { setEditNote(null); setNoteContent(''); setNoteSheetOpen(true) }}
-                className="text-[10px] font-semibold text-[#C5A880] flex items-center gap-1">
+                className="text-[10px] lg:text-xs font-semibold text-[#C5A880] flex items-center gap-1">
                 <Plus size={10} /> Nueva nota
               </button>
             </div>
             {data!.notes.map(n => (
-              <div key={n.id} className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-start gap-2">
+              <div key={n.id} className="bg-amber-50 border border-amber-200 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-4 lg:py-3 flex items-start gap-2">
                 <StickyNote size={13} className="text-amber-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-800 flex-1 leading-relaxed">{n.content}</p>
+                <p className="text-xs lg:text-sm text-amber-800 flex-1 leading-relaxed">{n.content}</p>
                 <div className="flex gap-1 shrink-0">
                   <button onClick={() => { setEditNote(n); setNoteContent(n.content); setNoteSheetOpen(true) }}
                     className="text-amber-400 hover:text-amber-600 p-0.5">
@@ -149,20 +149,20 @@ function CalendarioPage() {
         {/* Botón nueva nota si no hay ninguna */}
         {(data?.notes ?? []).length === 0 && !isLoading && (
           <button onClick={() => { setEditNote(null); setNoteContent(''); setNoteSheetOpen(true) }}
-            className="flex items-center gap-2 bg-amber-50 border border-dashed border-amber-300 rounded-xl px-3 py-2.5 text-xs text-amber-600 font-medium">
+            className="flex items-center gap-2 bg-amber-50 border border-dashed border-amber-300 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-4 lg:py-3 text-xs lg:text-sm text-amber-600 font-medium lg:col-span-3 lg:order-2 lg:sticky lg:top-6">
             <StickyNote size={13} />
             Agregar nota fija
           </button>
         )}
 
-        {/* Timeline */}
+        {/* Timeline — 70% a la izquierda en escritorio */}
         {!isLoading && sortedDays.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-400">Sin eventos este mes</div>
+          <div className="py-12 text-center text-sm text-gray-400 lg:col-span-7 lg:order-1">Sin eventos este mes</div>
         )}
 
         {sortedDays.length > 0 && (
-          <div className="flex flex-col gap-0">
-            <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">
+          <div className="flex flex-col gap-0 lg:col-span-7 lg:order-1">
+            <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">
               {MONTHS[month - 1]} {year}
             </p>
             {sortedDays.map(day => {
