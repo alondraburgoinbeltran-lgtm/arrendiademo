@@ -28,12 +28,37 @@ const SERVICE_TYPES: { value: ServiceType; label: string; Icon: any; color: stri
 const PROPERTY_BAR_COLORS = ['#0F2A4A', '#2F5FD1', '#14B8A6', '#F5A623', '#8B5CF6', '#9CA3AF']
 const MES_ABREV = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
+const FREQUENCY_OPTIONS: { value: string; label: string; months: number }[] = [
+  { value: 'mensual',    label: 'Mensual',    months: 1 },
+  { value: 'bimestral',  label: 'Bimestral',  months: 2 },
+  { value: 'trimestral', label: 'Trimestral', months: 3 },
+  { value: 'semestral',  label: 'Semestral',  months: 6 },
+  { value: 'anual',      label: 'Anual',      months: 12 },
+]
+
+function getPeriodLabel(paidAt: string, frequency: string): string {
+  if (!paidAt) return '—'
+  const months = FREQUENCY_OPTIONS.find(f => f.value === frequency)?.months ?? 1
+  const start = new Date(paidAt + 'T12:00:00')
+  const startMonth = start.getMonth()
+  const startYear = start.getFullYear()
+  if (months === 1) {
+    const lastDay = new Date(startYear, startMonth + 1, 0).getDate()
+    return `1 – ${lastDay} ${MES_ABREV[startMonth]} ${startYear}`
+  }
+  const endIndex = startMonth + months - 1
+  const endMonth = endIndex % 12
+  const endYear  = startYear + Math.floor(endIndex / 12)
+  return `${MES_ABREV[startMonth]} – ${MES_ABREV[endMonth]} ${endYear}`
+}
+
 const EMPTY_FORM = {
   property_id:  0,
   service_type: 'luz' as ServiceType,
   paid_at:      new Date().toISOString().split('T')[0],
   amount:       0,
   status:       'pagado',
+  frequency:    'mensual',
   comment:      '',
 }
 
@@ -135,6 +160,7 @@ function ServiciosPage() {
       paid_at:      sv.paid_at,
       amount:       sv.amount,
       status:       sv.status ?? 'pagado',
+      frequency:    sv.frequency ?? 'mensual',
       comment:      sv.comment ?? '',
     })
     setSheetOpen(true)
@@ -158,8 +184,7 @@ function ServiciosPage() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending
   const monthLabel = MESES.find(m => m.value === month)?.label ?? ''
-  const lastDay = new Date(year, month, 0).getDate()
-  const periodoLabel = `1 – ${lastDay} ${MES_ABREV[month - 1]} ${year}`
+  const totalFiltrado = filtered.reduce((s: number, sv: any) => s + sv.amount, 0)
 
   return (
     <div>
@@ -314,7 +339,7 @@ function ServiciosPage() {
             <div className="py-12 text-center text-sm text-gray-400 bg-white border border-[#E8E5DF] rounded-2xl">Sin resultados</div>
           )}
           {!isLoading && filtered.length > 0 && (
-            <ServiceTable services={filtered} periodoLabel={periodoLabel}
+            <ServiceTable services={filtered} total={totalFiltrado}
               onView={setViewing} onEdit={openEdit} onDelete={(sv: any) => setConfirmId(sv.id)} />
           )}
         </div>
@@ -467,8 +492,8 @@ function FilterSelect({ label, value, onChange, options }: {
 
 // ─── Tabla de servicios (escritorio) — header fijo, scroll solo en el cuerpo ──
 
-function ServiceTable({ services, periodoLabel, onView, onEdit, onDelete }: {
-  services: any[]; periodoLabel: string
+function ServiceTable({ services, total, onView, onEdit, onDelete }: {
+  services: any[]; total: number
   onView: (sv: any) => void; onEdit: (sv: any) => void; onDelete: (sv: any) => void
 }) {
   return (
@@ -476,14 +501,13 @@ function ServiceTable({ services, periodoLabel, onView, onEdit, onDelete }: {
       <div className="max-h-[560px] overflow-y-auto">
         <table className="w-full border-collapse table-fixed">
           <colgroup>
-            <col className="w-[16%]" />
+            <col className="w-[17%]" />
             <col className="w-[19%]" />
             <col className="w-[16%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[9%]" />
-            <col className="w-[8%]" />
-            <col className="w-[12%]" />
+            <col className="w-[11%]" />
+            <col className="w-[11%]" />
+            <col className="w-[11%]" />
+            <col className="w-[15%]" />
           </colgroup>
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-[#E8E5DF] bg-[#FAF8F4]">
@@ -492,7 +516,6 @@ function ServiceTable({ services, periodoLabel, onView, onEdit, onDelete }: {
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Periodo</th>
               <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Monto</th>
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Frecuencia</th>
-              <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Banco</th>
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Estado</th>
               <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
             </tr>
@@ -501,10 +524,10 @@ function ServiceTable({ services, periodoLabel, onView, onEdit, onDelete }: {
             {services.map((sv: any) => {
               const stype = SERVICE_TYPES.find(t => t.value === sv.service_type) ?? SERVICE_TYPES[4]
               const vencido = isVencido(sv)
-              const isPagado = sv.status === 'pagado'
+              const freq = sv.frequency ?? 'mensual'
               return (
                 <tr key={sv.id} className="border-b border-[#F0EDE7] last:border-0 transition-colors hover:bg-[#FAF8F4]">
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-4 text-left">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${stype.bg}`}>
                         <stype.Icon size={15} className={stype.color} />
@@ -512,15 +535,14 @@ function ServiceTable({ services, periodoLabel, onView, onEdit, onDelete }: {
                       <span className="text-sm font-medium text-[#1A1A1A] truncate">{stype.label}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-sm text-gray-600 truncate">{sv.property_name}{sv.property_number ? ` #${sv.property_number}` : ''}</td>
-                  <td className="px-5 py-4 text-sm text-gray-600 truncate">{periodoLabel}</td>
+                  <td className="px-5 py-4 text-sm text-gray-600 text-left truncate">{sv.property_name}{sv.property_number ? ` #${sv.property_number}` : ''}</td>
+                  <td className="px-5 py-4 text-sm text-gray-600 text-left truncate">{getPeriodLabel(sv.paid_at, freq)}</td>
                   <td className="px-5 py-4 text-sm font-semibold text-[#1A1A1A] text-right">
                     {formatCurrency(sv.amount)}
                     {sv.excedente > 0 && <span className="block text-[10px] font-normal text-amber-600">+{formatCurrency(sv.excedente)} exc.</span>}
                   </td>
-                  <td className="px-5 py-4 text-sm text-gray-600">Mensual</td>
-                  <td className="px-5 py-4 text-sm text-gray-600">—</td>
-                  <td className="px-5 py-4"><StatusChip status={sv.status} vencido={vencido} /></td>
+                  <td className="px-5 py-4 text-sm text-gray-600 text-left">{FREQUENCY_OPTIONS.find(f => f.value === freq)?.label ?? 'Mensual'}</td>
+                  <td className="px-5 py-4 text-left"><StatusChip status={sv.status} vencido={vencido} /></td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-1.5">
                       <button onClick={() => onView(sv)} title="Ver detalle"
@@ -541,6 +563,13 @@ function ServiceTable({ services, periodoLabel, onView, onEdit, onDelete }: {
               )
             })}
           </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-[#E8E5DF] bg-[#FAF8F4]">
+              <td colSpan={3} className="px-5 py-3.5 text-sm font-bold text-[#1A1A1A] uppercase tracking-wide text-left">Total</td>
+              <td className="px-5 py-3.5 text-sm font-bold text-[#1A1A1A] text-right">{formatCurrency(total)}</td>
+              <td colSpan={3}></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </div>
@@ -567,7 +596,8 @@ function ServiceDetail({ service: sv, onEdit }: { service: any; onEdit: () => vo
         <DetailItem label="Monto" value={formatCurrency(sv.amount)} />
         <DetailItem label="Fecha de pago" value={formatDate(sv.paid_at)} />
         <DetailItem label="Estado" value={sv.status === 'pagado' ? 'Pagado' : (isVencido(sv) ? 'Vencido' : 'Pendiente')} />
-        <DetailItem label="Frecuencia" value="Mensual" />
+        <DetailItem label="Frecuencia" value={FREQUENCY_OPTIONS.find(f => f.value === (sv.frequency ?? 'mensual'))?.label ?? 'Mensual'} />
+        <DetailItem label="Periodo" value={getPeriodLabel(sv.paid_at, sv.frequency ?? 'mensual')} />
       </div>
 
       {sv.excedente > 0 && (
@@ -719,6 +749,29 @@ function ServiceFormComp({ form, onChange, properties, onSubmit, onCancel, savin
         </div>
       </div>
 
+      {/* Frecuencia */}
+      <div>
+        <label className="label">Frecuencia</label>
+        <div className="grid grid-cols-3 gap-2">
+          {FREQUENCY_OPTIONS.map(f => (
+            <button key={f.value} type="button"
+              onClick={() => onChange({ ...form, frequency: f.value })}
+              className={`py-2.5 rounded-xl border text-xs font-medium transition-colors ${
+                form.frequency === f.value ? 'border-primary-500 bg-primary-50 text-primary-500' : 'border-[#E8E5DF] text-gray-500'
+              }`}
+            >{f.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Periodo — calculado automáticamente según la frecuencia elegida */}
+      <div className="bg-gray-50 rounded-lg px-3 py-2.5 flex items-center justify-between">
+        <span className="text-xs text-gray-500">Periodo</span>
+        <span className="text-sm font-semibold text-[#1A1A1A]">
+          {form.paid_at ? getPeriodLabel(form.paid_at, form.frequency || 'mensual') : '—'}
+        </span>
+      </div>
+
       {/* Aviso excedente */}
       {excedente > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
@@ -764,4 +817,3 @@ function ServiceFormComp({ form, onChange, properties, onSubmit, onCancel, savin
     </form>
   )
 }
-
