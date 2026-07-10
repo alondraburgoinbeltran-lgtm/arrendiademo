@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
-  Plus, Search,
+  Plus, Search, RefreshCw,
   ToggleLeft, ToggleRight, Pencil, Trash2, History,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -46,6 +47,7 @@ function PropiedadesPage() {
   const updateMutation = useUpdateProperty()
   const deleteMutation = useDeleteProperty()
   const toggleMutation = useToggleProperty()
+  const queryClient = useQueryClient()
 
   const [search, setSearch]       = useState('')
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -53,6 +55,10 @@ function PropiedadesPage() {
   const [form, setForm]           = useState<PropertyForm>(EMPTY_FORM)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [historyProp, setHistoryProp] = useState<Property | null>(null)
+
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ['properties'] })
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -119,14 +125,23 @@ function PropiedadesPage() {
       <PageHeader
         title="Propiedades"
         action={
-          <button onClick={openCreate} className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
-            <Plus size={14} className="text-accent-DEFAULT" />
-            <span className="text-accent-DEFAULT text-xs font-medium">Nueva</span>
-          </button>
+          <div className="flex items-center flex-wrap justify-end gap-2 lg:gap-3">
+            <button
+              onClick={handleRefresh}
+              title="Actualizar"
+              className="h-9 lg:h-10 w-9 lg:w-10 flex items-center justify-center rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 transition-colors shrink-0"
+            >
+              <RefreshCw size={16} />
+            </button>
+            <button onClick={openCreate} className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
+              <Plus size={14} className="text-white" />
+              <span className="text-white text-xs font-medium">Nueva</span>
+            </button>
+          </div>
         }
       />
 
-      <div className="bg-primary-500 px-4 pb-3 lg:px-8 xl:px-10 lg:pb-5">
+      <div className="px-4 pt-3 lg:px-8 xl:px-10 lg:pt-5">
         <div className="grid grid-cols-4 gap-2 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:gap-4">
           {[
             { label: 'Total',     value: String(summary.total) },
@@ -134,9 +149,9 @@ function PropiedadesPage() {
             { label: 'Inactivas', value: String(summary.inactive) },
             { label: 'Renta',     value: formatCurrency(summary.rent) },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-white/10 rounded-lg lg:rounded-xl px-2 py-2 lg:px-4 lg:py-3 text-center">
-              <p className="text-white text-sm lg:text-2xl font-semibold leading-tight">{value}</p>
-              <p className="text-white/60 text-[9px] lg:text-xs mt-0.5">{label}</p>
+            <div key={label} className="bg-white border border-[#E8E5DF] rounded-lg lg:rounded-xl px-2 py-2.5 lg:px-4 lg:py-3.5 text-center lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
+              <p className="text-[#1A1A1A] text-sm lg:text-2xl font-bold leading-tight">{value}</p>
+              <p className="text-gray-400 text-[9px] lg:text-xs mt-0.5 font-semibold uppercase tracking-wide">{label}</p>
             </div>
           ))}
         </div>
@@ -345,4 +360,6 @@ function ActionBtn({ onClick, title, children, danger, disabled }: {
     </button>
   )
 } 
+
+
 
