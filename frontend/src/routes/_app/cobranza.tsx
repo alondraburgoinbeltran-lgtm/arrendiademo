@@ -204,8 +204,8 @@ function CobranzaPage() {
               onClick={() => setPickerOpen(true)}
               className="h-9 lg:h-10 flex items-center gap-1.5 bg-accent-DEFAULT rounded-lg px-3 lg:px-4 hover:brightness-105 transition-all shrink-0"
             >
-              <span className="text-[#1A1A1A] text-base leading-none font-bold">+</span>
-              <span className="text-[#1A1A1A] text-xs lg:text-sm font-semibold whitespace-nowrap">Registrar pago</span>
+              <span className="text-white text-base leading-none font-bold">+</span>
+              <span className="text-white text-xs lg:text-sm font-semibold whitespace-nowrap">Registrar pago</span>
             </button>
           </div>
         }
