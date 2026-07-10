@@ -198,7 +198,7 @@ export interface DashboardData {
   utilidad: number
   excedentes_pendientes: ExcedenteLuz[]
   contracts_expiring: ContractAlert[]
-  invoices_pending: number
+  invoices_pending: { id: number; property_name: string; property_number: string | null }[]
   pending_1_5: any[]
   pending_15_20: any[]
   paid_1_5: any[]
@@ -255,3 +255,4 @@ export interface CalendarData {
   events: CalendarEvent[]
   notes: Note[]
 }
+
