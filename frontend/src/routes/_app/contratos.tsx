@@ -101,8 +101,8 @@ function ContratosPage() {
         title="Contratos"
         action={
           <button onClick={openCreate} className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
-            <Plus size={14} className="text-accent-DEFAULT" />
-            <span className="text-accent-DEFAULT text-xs font-medium">Nuevo</span>
+            <Plus size={14} className="text-white" />
+            <span className="text-white text-xs font-medium">Nuevo</span>
           </button>
         }
       />
