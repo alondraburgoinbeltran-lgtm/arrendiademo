@@ -36,12 +36,11 @@ const FREQUENCY_OPTIONS: { value: string; label: string; months: number }[] = [
   { value: 'anual',      label: 'Anual',      months: 12 },
 ]
 
-function getPeriodLabel(paidAt: string, frequency: string): string {
-  if (!paidAt) return '—'
+function getPeriodLabel(periodMonth: number, periodYear: number, frequency: string): string {
+  if (!periodMonth || !periodYear) return '—'
   const months = FREQUENCY_OPTIONS.find(f => f.value === frequency)?.months ?? 1
-  const start = new Date(paidAt + 'T12:00:00')
-  const startMonth = start.getMonth()
-  const startYear = start.getFullYear()
+  const startMonth = periodMonth - 1
+  const startYear  = periodYear
   if (months === 1) {
     const lastDay = new Date(startYear, startMonth + 1, 0).getDate()
     return `1 – ${lastDay} ${MES_ABREV[startMonth]} ${startYear}`
@@ -59,6 +58,8 @@ const EMPTY_FORM = {
   amount:       0,
   status:       'pagado',
   frequency:    'mensual',
+  period_month: new Date().getMonth() + 1,
+  period_year:  new Date().getFullYear(),
   comment:      '',
 }
 
@@ -147,7 +148,7 @@ function ServiciosPage() {
 
   function openCreate() {
     setEditing(null)
-    setForm({ ...EMPTY_FORM, paid_at: new Date().toISOString().split('T')[0] })
+    setForm({ ...EMPTY_FORM, paid_at: new Date().toISOString().split('T')[0], period_month: month, period_year: year })
     setSheetOpen(true)
   }
 
@@ -161,6 +162,8 @@ function ServiciosPage() {
       amount:       sv.amount,
       status:       sv.status ?? 'pagado',
       frequency:    sv.frequency ?? 'mensual',
+      period_month: sv.period_month ?? new Date(sv.paid_at).getMonth() + 1,
+      period_year:  sv.period_year  ?? new Date(sv.paid_at).getFullYear(),
       comment:      sv.comment ?? '',
     })
     setSheetOpen(true)
@@ -503,11 +506,11 @@ function ServiceTable({ services, total, onView, onEdit, onDelete }: {
           <colgroup>
             <col className="w-[17%]" />
             <col className="w-[19%]" />
-            <col className="w-[16%]" />
-            <col className="w-[11%]" />
-            <col className="w-[11%]" />
-            <col className="w-[11%]" />
-            <col className="w-[15%]" />
+            <col className="w-[12%]" />
+            <col className="w-[10%]" />
+            <col className="w-[12%]" />
+            <col className="w-[10%]" />
+            <col className="w-[20%]" />
           </colgroup>
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-[#E8E5DF] bg-[#FAF8F4]">
@@ -517,7 +520,7 @@ function ServiceTable({ services, total, onView, onEdit, onDelete }: {
               <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Monto</th>
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Frecuencia</th>
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Estado</th>
-              <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
+              <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -536,7 +539,7 @@ function ServiceTable({ services, total, onView, onEdit, onDelete }: {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-sm text-gray-600 text-left truncate">{sv.property_name}{sv.property_number ? ` #${sv.property_number}` : ''}</td>
-                  <td className="px-5 py-4 text-sm text-gray-600 text-left truncate">{getPeriodLabel(sv.paid_at, freq)}</td>
+                  <td className="px-5 py-4 text-sm text-gray-600 text-left truncate">{getPeriodLabel(sv.period_month, sv.period_year, freq)}</td>
                   <td className="px-5 py-4 text-sm font-semibold text-[#1A1A1A] text-right">
                     {formatCurrency(sv.amount)}
                     {sv.excedente > 0 && <span className="block text-[10px] font-normal text-amber-600">+{formatCurrency(sv.excedente)} exc.</span>}
@@ -544,7 +547,7 @@ function ServiceTable({ services, total, onView, onEdit, onDelete }: {
                   <td className="px-5 py-4 text-sm text-gray-600 text-left">{FREQUENCY_OPTIONS.find(f => f.value === freq)?.label ?? 'Mensual'}</td>
                   <td className="px-5 py-4 text-left"><StatusChip status={sv.status} vencido={vencido} /></td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center justify-end gap-1.5">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button onClick={() => onView(sv)} title="Ver detalle"
                         className="h-8 w-8 flex items-center justify-center rounded-lg border border-[#E8E5DF] text-gray-400 hover:bg-gray-50 transition-all duration-200 hover:-translate-y-[1px]">
                         <Eye size={14} />
@@ -597,7 +600,7 @@ function ServiceDetail({ service: sv, onEdit }: { service: any; onEdit: () => vo
         <DetailItem label="Fecha de pago" value={formatDate(sv.paid_at)} />
         <DetailItem label="Estado" value={sv.status === 'pagado' ? 'Pagado' : (isVencido(sv) ? 'Vencido' : 'Pendiente')} />
         <DetailItem label="Frecuencia" value={FREQUENCY_OPTIONS.find(f => f.value === (sv.frequency ?? 'mensual'))?.label ?? 'Mensual'} />
-        <DetailItem label="Periodo" value={getPeriodLabel(sv.paid_at, sv.frequency ?? 'mensual')} />
+        <DetailItem label="Periodo" value={getPeriodLabel(sv.period_month, sv.period_year, sv.frequency ?? 'mensual')} />
       </div>
 
       {sv.excedente > 0 && (
@@ -764,12 +767,22 @@ function ServiceFormComp({ form, onChange, properties, onSubmit, onCancel, savin
         </div>
       </div>
 
-      {/* Periodo — calculado automáticamente según la frecuencia elegida */}
-      <div className="bg-gray-50 rounded-lg px-3 py-2.5 flex items-center justify-between">
-        <span className="text-xs text-gray-500">Periodo</span>
-        <span className="text-sm font-semibold text-[#1A1A1A]">
-          {form.paid_at ? getPeriodLabel(form.paid_at, form.frequency || 'mensual') : '—'}
-        </span>
+      {/* Periodo — independiente de la fecha de pago (el recibo puede ser de otro mes) */}
+      <div>
+        <label className="label">Periodo (inicio)</label>
+        <div className="grid grid-cols-2 gap-2">
+          <select className="input-base" value={form.period_month}
+            onChange={e => onChange({ ...form, period_month: Number(e.target.value) })}>
+            {MESES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+          <select className="input-base" value={form.period_year}
+            onChange={e => onChange({ ...form, period_year: Number(e.target.value) })}>
+            {ANIOS_DISPONIBLES.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <p className="text-xs text-gray-400 mt-1.5">
+          Periodo del recibo: <span className="font-semibold text-[#1A1A1A]">{getPeriodLabel(form.period_month, form.period_year, form.frequency || 'mensual')}</span>
+        </p>
       </div>
 
       {/* Aviso excedente */}
