@@ -69,7 +69,7 @@ function DashboardPage() {
                   onClick={() => navigate({ to: '/cobranza' })} />
               </div>
               <KpiCardWide label="Ingreso esperado" value={formatCurrency(data.total_expected)}
-                sub="total del mes" icon={<TrendingUp size={16} />} className="lg:col-span-4" />
+                sub="total del mes" icon={<TrendingUp size={18} className="lg:w-6 lg:h-6" />} className="lg:col-span-4" />
             </div>
 
             {/* Línea 2 — Egresos */}
@@ -274,13 +274,15 @@ function KpiCardWide({ label, value, sub, icon, className }: {
   label: string; value: string; sub: string; icon: React.ReactNode; className?: string
 }) {
   return (
-    <div className={`bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-3.5 lg:p-5 flex items-center gap-3 lg:gap-4 lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px] ${className ?? ''}`}>
-      <div className="w-7 h-7 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl flex items-center justify-center text-blue-700 bg-blue-50 shrink-0">{icon}</div>
-      <div>
-        <p className="text-[12px] lg:text-sm font-semibold text-[#1A1A1A]">{label}</p>
-        <p className="text-[20px] lg:text-2xl font-bold text-[#1A1A1A] leading-tight">{value}</p>
-        <p className="text-[10px] lg:text-sm text-gray-400">{sub}</p>
+    <div className={`bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-4 lg:p-6 flex items-center justify-between transition-all duration-200 lg:hover:-translate-y-[1px] ${className ?? ''}`}>
+      <div className="flex items-center gap-3 lg:gap-4">
+        <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-blue-700 bg-blue-50 shrink-0">{icon}</div>
+        <div>
+          <p className="text-xs lg:text-base font-bold uppercase tracking-wide text-[#1A1A1A]">{label}</p>
+          <p className="text-[10px] lg:text-sm text-gray-400 mt-0.5">{sub}</p>
+        </div>
       </div>
+      <p className="text-xl lg:text-4xl font-bold text-[#1A1A1A]">{value}</p>
     </div>
   )
 }
