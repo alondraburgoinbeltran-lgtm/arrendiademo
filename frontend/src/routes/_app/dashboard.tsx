@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useMarcarExcedenteCobrado } from '@/hooks/useServices'
+import { useMarkInvoiceDone } from '@/hooks/useCalendar'
 import { formatCurrency, formatDate, currentMonthYear } from '@/lib/utils'
 import { MESES, ANIOS_DISPONIBLES } from '@/lib/dateOptions'
 
@@ -24,6 +25,7 @@ function DashboardPage() {
   const [year, setYear]   = useState(now.year)
   const navigate = useNavigate()
   const excedenteMutation = useMarcarExcedenteCobrado()
+  const markInvoiceDone = useMarkInvoiceDone()
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useDashboard(month, year)
@@ -195,7 +197,7 @@ function DashboardPage() {
 
             {/* Recordatorios */}
             {(data.contracts_expiring.length > 0 ||
-              data.invoices_pending > 0 ||
+              data.invoices_pending.length > 0 ||
               data.services_pendientes > 0) && (
               <Section title="Recordatorios" className="lg:col-span-2">
                 <div className="flex flex-col gap-2">
@@ -228,19 +230,30 @@ function DashboardPage() {
                     </AlertCard>
                   )}
 
-                  {data.invoices_pending > 0 && (
+                  {data.invoices_pending.length > 0 && (
                     <AlertCard color="blue" icon={<AlertTriangle size={14} />}
-                      title="Facturas pendientes" count={data.invoices_pending}>
-                      <p className="text-xs text-blue-700 py-1">
-                        {data.invoices_pending} {data.invoices_pending === 1 ? 'propiedad requiere' : 'propiedades requieren'} factura este mes
-                      </p>
+                      title="Facturas pendientes" count={data.invoices_pending.length}>
+                      {data.invoices_pending.map(p => (
+                        <div key={p.id} className="flex justify-between items-center py-1.5 border-b border-blue-100 last:border-0">
+                          <p className="text-xs font-medium text-blue-800">
+                            {p.property_name}{p.property_number ? ` #${p.property_number}` : ''}
+                          </p>
+                          <button
+                            onClick={() => markInvoiceDone.mutate({ property_id: p.id, month, year })}
+                            disabled={markInvoiceDone.isPending}
+                            className="text-[10px] font-semibold bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg active:scale-95 disabled:opacity-50 shrink-0 ml-2"
+                          >
+                            Marcar hecho ✓
+                          </button>
+                        </div>
+                      ))}
                     </AlertCard>
                   )}
                 </div>
               </Section>
             )}
 
-            {data.contracts_expiring.length === 0 && data.invoices_pending === 0 &&
+            {data.contracts_expiring.length === 0 && data.invoices_pending.length === 0 &&
              data.pending_1_5.length === 0 && data.pending_15_20.length === 0 &&
              data.services_pendientes === 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl lg:rounded-2xl px-4 py-3 lg:px-5 lg:py-4 flex items-center gap-3 lg:col-span-4">
