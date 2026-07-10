@@ -76,12 +76,14 @@ FROM contracts c JOIN properties p ON p.id = c.property_id
     ORDER BY c.end_date ASC
   `).bind(today, in30).all()
 
-  // Facturas pendientes
-  const { results: invoices } = await c.env.DB.prepare(`
-    SELECT COUNT(*) AS total FROM rents r JOIN properties p ON p.id = r.property_id
-    WHERE r.month = ? AND r.year = ? AND r.status = 'paid' AND p.requires_invoice = 1
+  // Facturas pendientes — independiente del estado de cobranza
+  const { results: invoicesPendingList } = await c.env.DB.prepare(`
+    SELECT p.id, p.name AS property_name, p.number AS property_number
+    FROM properties p
+    LEFT JOIN invoices i ON i.property_id = p.id AND i.month = ? AND i.year = ?
+    WHERE p.requires_invoice = 1 AND p.active = 1 AND (i.status IS NULL OR i.status != 'done')
+    ORDER BY p.name ASC
   `).bind(month, year).all()
-  const invoicesPending = (invoices[0] as any)?.total ?? 0
 
   const pending_1_5   = rentsPending.filter((r: any) => (r.payment_day as number) >= 1  && (r.payment_day as number) <= 5)
   const pending_15_20 = rentsPending.filter((r: any) => (r.payment_day as number) >= 15 && (r.payment_day as number) <= 20)
@@ -109,7 +111,7 @@ FROM contracts c JOIN properties p ON p.id = c.property_id
       utilidad,
       excedentes_pendientes: excedentesPendientes,
       contracts_expiring:    expiringContracts,
-      invoices_pending:      invoicesPending,
+      invoices_pending:      invoicesPendingList,
       pending_1_5,
       pending_15_20,
       paid_1_5,
