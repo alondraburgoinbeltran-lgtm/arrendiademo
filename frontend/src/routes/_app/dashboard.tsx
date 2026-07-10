@@ -171,39 +171,40 @@ function DashboardPage() {
             )}
 
             {/* Cobros por periodo — detalle por propiedad, sin perder historial */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 lg:self-stretch">
               <CobrosPorPeriodoCard data={data} />
             </div>
 
             {/* Próximos eventos — panel exclusivo de escritorio, resume lo más urgente.
                 Ocupa el lugar de Cuentas bancarias (quitada), junto a Cobros por periodo.
-                Va justo aquí (y no después de Recordatorios) para que el grid con
-                dense-packing lo suba y llene el espacio bajo BBVA/Banorte. */}
+                lg:self-stretch iguala su altura a la de Cobros por periodo. */}
             {(data.contracts_expiring.length > 0 || data.pending_1_5.length > 0 || data.pending_15_20.length > 0) && (
-              <div className="hidden lg:flex lg:flex-col lg:col-span-2 lg:gap-2 bg-white border border-[#E8E5DF] rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wider">Próximos eventos</p>
-                  <button onClick={() => navigate({ to: '/calendario' })} className="text-xs font-medium text-primary-500 hover:underline">Ver todos</button>
+              <div className="hidden lg:flex lg:flex-col lg:col-span-2 lg:self-stretch lg:max-h-[480px] bg-white border border-[#E8E5DF] rounded-2xl overflow-hidden">
+                <div className="px-4 py-3 lg:px-5 lg:py-3.5 border-b border-[#E8E5DF] flex items-center justify-between shrink-0">
+                  <p className="text-[15px] lg:text-lg font-bold text-[#1A1A1A]">Próximos eventos</p>
+                  <button onClick={() => navigate({ to: '/calendario' })} className="text-xs lg:text-sm font-medium text-primary-500 hover:underline">Ver todos</button>
                 </div>
-                <div className="flex flex-col gap-1">
-                  {data.contracts_expiring.slice(0, 3).map(c => (
-                    <div key={`ce-${c.id}`} className="flex justify-between items-center py-2 border-b border-[#F0EDE7] last:border-0">
-                      <div>
-                        <p className="text-sm font-medium text-[#1A1A1A]">{c.property_name}{c.property_number ? ` #${c.property_number}` : ''}</p>
-                        <p className="text-xs text-gray-400">Contrato vence · {c.tenant_name}</p>
+                <div className="p-4 lg:p-5 flex-1 overflow-y-auto">
+                  <div className="flex flex-col gap-1">
+                    {data.contracts_expiring.slice(0, 3).map(c => (
+                      <div key={`ce-${c.id}`} className="flex justify-between items-center py-2.5 border-b border-[#F0EDE7] last:border-0">
+                        <div>
+                          <p className="text-sm lg:text-[15px] font-medium text-[#1A1A1A]">{c.property_name}{c.property_number ? ` #${c.property_number}` : ''}</p>
+                          <p className="text-xs lg:text-sm text-gray-400">Contrato vence · {c.tenant_name}</p>
+                        </div>
+                        <span className="text-xs lg:text-sm font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0 ml-2">{c.days_remaining} días</span>
                       </div>
-                      <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0 ml-2">{c.days_remaining} días</span>
-                    </div>
-                  ))}
-                  {[...data.pending_1_5, ...data.pending_15_20].slice(0, 3).map((r: any) => (
-                    <div key={`pr-${r.id}`} className="flex justify-between items-center py-2 border-b border-[#F0EDE7] last:border-0">
-                      <div>
-                        <p className="text-sm font-medium text-[#1A1A1A]">{r.property_name}{r.property_number ? ` #${r.property_number}` : ''}</p>
-                        <p className="text-xs text-gray-400">Pago de renta pendiente</p>
+                    ))}
+                    {[...data.pending_1_5, ...data.pending_15_20].slice(0, 3).map((r: any) => (
+                      <div key={`pr-${r.id}`} className="flex justify-between items-center py-2.5 border-b border-[#F0EDE7] last:border-0">
+                        <div>
+                          <p className="text-sm lg:text-[15px] font-medium text-[#1A1A1A]">{r.property_name}{r.property_number ? ` #${r.property_number}` : ''}</p>
+                          <p className="text-xs lg:text-sm text-gray-400">Pago de renta pendiente</p>
+                        </div>
+                        <span className="text-xs lg:text-sm font-medium text-amber-700 shrink-0 ml-2">{formatCurrency(r.amount)}</span>
                       </div>
-                      <span className="text-xs font-medium text-amber-700 shrink-0 ml-2">{formatCurrency(r.amount)}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -349,19 +350,19 @@ function CobrosPorPeriodoCard({ data }: { data: any }) {
   const totalEsperado  = totalCobrado + totalPendiente
 
   return (
-    <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl overflow-hidden lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
-      <div className="px-4 py-3 lg:px-5 lg:py-3.5 border-b border-[#E8E5DF]">
-        <p className="text-sm lg:text-base font-bold text-[#1A1A1A]">
+    <div className="h-full lg:max-h-[480px] flex flex-col bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl overflow-hidden lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
+      <div className="px-4 py-3 lg:px-5 lg:py-3.5 border-b border-[#E8E5DF] shrink-0">
+        <p className="text-[15px] lg:text-lg font-bold text-[#1A1A1A]">
           Cobros por periodo <span className="text-gray-400 font-normal">(quincenas)</span>
         </p>
       </div>
 
-      <div className="p-3 lg:p-4">
+      <div className="p-4 lg:p-5 flex-1 flex flex-col min-h-0">
         {/* Tabs */}
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-2 mb-3 shrink-0">
           <button
             onClick={() => setTab('1_5')}
-            className={`flex-1 text-xs lg:text-sm font-bold py-2 rounded-lg border transition-colors ${
+            className={`flex-1 text-sm lg:text-base font-bold py-2 rounded-lg border transition-colors ${
               tab === '1_5' ? 'bg-primary-500 text-white border-primary-500' : 'border-[#E8E5DF] text-gray-500'
             }`}
           >
@@ -369,7 +370,7 @@ function CobrosPorPeriodoCard({ data }: { data: any }) {
           </button>
           <button
             onClick={() => setTab('15_20')}
-            className={`flex-1 text-xs lg:text-sm font-bold py-2 rounded-lg border transition-colors ${
+            className={`flex-1 text-sm lg:text-base font-bold py-2 rounded-lg border transition-colors ${
               tab === '15_20' ? 'bg-primary-500 text-white border-primary-500' : 'border-[#E8E5DF] text-gray-500'
             }`}
           >
@@ -378,40 +379,42 @@ function CobrosPorPeriodoCard({ data }: { data: any }) {
         </div>
 
         {/* Resumen */}
-        <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="grid grid-cols-4 gap-2 mb-3 shrink-0">
           <div className="bg-[#FAFAF8] rounded-lg p-2">
-            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Esperado</p>
-            <p className="text-xs lg:text-sm font-bold text-[#1A1A1A] mt-0.5">{formatCurrency(totalEsperado)}</p>
+            <p className="text-[10px] lg:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Esperado</p>
+            <p className="text-sm lg:text-base font-bold text-[#1A1A1A] mt-0.5">{formatCurrency(totalEsperado)}</p>
           </div>
           <div className="bg-[#FAFAF8] rounded-lg p-2">
-            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cobrado</p>
-            <p className="text-xs lg:text-sm font-bold text-green-700 mt-0.5">{formatCurrency(totalCobrado)}</p>
+            <p className="text-[10px] lg:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Cobrado</p>
+            <p className="text-sm lg:text-base font-bold text-green-700 mt-0.5">{formatCurrency(totalCobrado)}</p>
           </div>
           <div className="bg-[#FAFAF8] rounded-lg p-2">
-            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pendiente</p>
-            <p className="text-xs lg:text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(totalPendiente)}</p>
+            <p className="text-[10px] lg:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Pendiente</p>
+            <p className="text-sm lg:text-base font-bold text-amber-700 mt-0.5">{formatCurrency(totalPendiente)}</p>
           </div>
           <div className="bg-[#FAFAF8] rounded-lg p-2">
-            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Propiedades</p>
-            <p className="text-xs lg:text-sm font-bold text-[#1A1A1A] mt-0.5">{items.length}</p>
+            <p className="text-[10px] lg:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Propiedades</p>
+            <p className="text-sm lg:text-base font-bold text-[#1A1A1A] mt-0.5">{items.length}</p>
           </div>
         </div>
 
-        {/* Detalle por propiedad — nunca se elimina, solo cambia el estado */}
+        {/* Detalle por propiedad — nunca se elimina, solo cambia el estado.
+            Lista con scroll propio para que la tarjeta no crezca sin límite
+            si se agregan más propiedades. */}
         {items.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center py-4">Sin propiedades en este periodo</p>
+          <p className="text-sm text-gray-400 text-center py-4">Sin propiedades en este periodo</p>
         ) : (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto pr-1">
             {items.map((r: any) => (
-              <div key={`${r._status}-${r.id}`} className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-[#FAFAF8]">
+              <div key={`${r._status}-${r.id}`} className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-[#FAFAF8] shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r._status === 'paid' ? 'bg-green-500' : 'bg-amber-500'}`} />
-                  <span className="text-xs font-semibold text-[#1A1A1A] truncate">
+                  <span className="text-sm font-semibold text-[#1A1A1A] truncate">
                     {r.property_name}{r.property_number ? ` #${r.property_number}` : ''}
                   </span>
-                  <span className="text-xs text-gray-400 shrink-0">{formatCurrency(r.amount)}</span>
+                  <span className="text-sm text-gray-400 shrink-0">{formatCurrency(r.amount)}</span>
                 </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                   r._status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                 }`}>
                   {r._status === 'paid' ? 'Cobrado' : 'Pendiente'}
@@ -456,3 +459,4 @@ function AlertCard({ color, icon, title, count, children, onClick }: {
     </div>
   )
 }
+
