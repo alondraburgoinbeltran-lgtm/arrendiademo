@@ -1,15 +1,34 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
-  ChevronLeft, ChevronRight, Home, Clock,
+  Home, Clock,
   TrendingUp, Wrench, FileText, AlertTriangle,
   Zap, TrendingDown,
-  Receipt,
+  Receipt, ChevronDown, RefreshCw,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useMarcarExcedenteCobrado } from '@/hooks/useServices'
-import { formatCurrency, formatDate, currentMonthYear, formatMonthYear } from '@/lib/utils'
+import { formatCurrency, formatDate, currentMonthYear } from '@/lib/utils'
+
+const MESES = [
+  { value: 1,  label: 'Enero' },
+  { value: 2,  label: 'Febrero' },
+  { value: 3,  label: 'Marzo' },
+  { value: 4,  label: 'Abril' },
+  { value: 5,  label: 'Mayo' },
+  { value: 6,  label: 'Junio' },
+  { value: 7,  label: 'Julio' },
+  { value: 8,  label: 'Agosto' },
+  { value: 9,  label: 'Septiembre' },
+  { value: 10, label: 'Octubre' },
+  { value: 11, label: 'Noviembre' },
+  { value: 12, label: 'Diciembre' },
+]
+
+// Agrega más años aquí cuando se necesiten (ej. 2029, 2030, ...)
+const ANIOS_DISPONIBLES = [2024, 2025, 2026, 2027, 2028]
 
 export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
@@ -21,30 +40,39 @@ function DashboardPage() {
   const [year, setYear]   = useState(now.year)
   const navigate = useNavigate()
   const excedenteMutation = useMarcarExcedenteCobrado()
+  const queryClient = useQueryClient()
 
   const { data, isLoading } = useDashboard(month, year)
 
-  function prevMonth() {
-    if (month === 1) { setMonth(12); setYear(y => y - 1) }
-    else setMonth(m => m - 1)
-  }
-  function nextMonth() {
-    if (month === 12) { setMonth(1); setYear(y => y + 1) }
-    else setMonth(m => m + 1)
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ['dashboard', month, year] })
   }
 
   return (
     <div>
       <PageHeader
         title="Dashboard"
-        subtitle={formatMonthYear(month, year)}
+        subtitle="Resumen financiero y operativo"
         action={
-          <div className="flex items-center gap-1">
-            <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10">
-              <ChevronLeft size={14} className="text-white" />
-            </button>
-            <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10">
-              <ChevronRight size={14} className="text-white" />
+          <div className="flex items-end gap-2 lg:gap-3">
+            <HeaderSelect
+              label="Mes"
+              value={month}
+              onChange={(v) => setMonth(v)}
+              options={MESES}
+            />
+            <HeaderSelect
+              label="Año"
+              value={year}
+              onChange={(v) => setYear(v)}
+              options={ANIOS_DISPONIBLES.map(y => ({ value: y, label: String(y) }))}
+            />
+            <button
+              onClick={handleRefresh}
+              title="Actualizar"
+              className="h-9 lg:h-10 w-9 lg:w-10 flex items-center justify-center rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 transition-colors shrink-0"
+            >
+              <RefreshCw size={16} />
             </button>
           </div>
         }
@@ -69,7 +97,7 @@ function DashboardPage() {
                   onClick={() => navigate({ to: '/cobranza' })} />
               </div>
               <KpiCardWide label="Ingreso esperado" value={formatCurrency(data.total_expected)}
-                sub="total del mes" icon={<TrendingUp size={18} className="lg:w-6 lg:h-6" />} className="lg:col-span-4" />
+                sub="total del mes" icon={<TrendingUp size={16} />} className="lg:col-span-4" />
             </div>
 
             {/* Línea 2 — Egresos */}
@@ -147,15 +175,8 @@ function DashboardPage() {
               <CobrosPorPeriodoCard data={data} />
             </div>
 
-            {/* Cuentas bancarias */}
-            <Section title="Por cuenta bancaria" className="lg:contents">
-              <div className="grid grid-cols-2 gap-3 lg:contents">
-                <BankCard bank="BBVA"    value={data.bbva_total}    color="#0066B3" />
-                <BankCard bank="Banorte" value={data.banorte_total} color="#D4002A" />
-              </div>
-            </Section>
-
             {/* Próximos eventos — panel exclusivo de escritorio, resume lo más urgente.
+                Ocupa el lugar de Cuentas bancarias (quitada), junto a Cobros por periodo.
                 Va justo aquí (y no después de Recordatorios) para que el grid con
                 dense-packing lo suba y llene el espacio bajo BBVA/Banorte. */}
             {(data.contracts_expiring.length > 0 || data.pending_1_5.length > 0 || data.pending_15_20.length > 0) && (
@@ -248,6 +269,31 @@ function DashboardPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function HeaderSelect({ label, value, onChange, options }: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  options: { value: number; label: string }[]
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-[9px] lg:text-[10px] font-semibold text-white/50 uppercase tracking-wider px-0.5">{label}</span>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="h-9 lg:h-10 w-[88px] lg:w-[130px] appearance-none bg-white/10 border border-white/15 rounded-lg pl-3 pr-8 text-xs lg:text-sm font-semibold text-white cursor-pointer transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
+        >
+          {options.map(o => (
+            <option key={o.value} value={o.value} className="text-[#1A1A1A]">{o.label}</option>
+          ))}
+        </select>
+        <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70" />
+      </div>
+    </label>
   )
 }
 
@@ -374,18 +420,6 @@ function CobrosPorPeriodoCard({ data }: { data: any }) {
             ))}
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-function BankCard({ bank, value, color }: { bank: string; value: number; color: string }) {
-  return (
-    <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-3.5 lg:p-5 flex items-center gap-3 lg:gap-4 lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
-      <div className="w-3 h-3 lg:w-4 lg:h-4 rounded-full shrink-0" style={{ background: color }} />
-      <div>
-        <p className="text-[12px] lg:text-sm font-semibold text-gray-400">{bank}</p>
-        <p className="text-[20px] lg:text-2xl font-bold text-[#1A1A1A]">{formatCurrency(value)}</p>
       </div>
     </div>
   )
