@@ -3,7 +3,7 @@ import { useState } from 'react'
 import {
   ChevronLeft, ChevronRight, Home, Clock,
   TrendingUp, Wrench, FileText, AlertTriangle,
-  CalendarClock, Zap, TrendingDown,
+  Zap, TrendingDown,
   Receipt,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -155,11 +155,41 @@ function DashboardPage() {
               </div>
             </Section>
 
+            {/* Próximos eventos — panel exclusivo de escritorio, resume lo más urgente.
+                Va justo aquí (y no después de Recordatorios) para que el grid con
+                dense-packing lo suba y llene el espacio bajo BBVA/Banorte. */}
+            {(data.contracts_expiring.length > 0 || data.pending_1_5.length > 0 || data.pending_15_20.length > 0) && (
+              <div className="hidden lg:flex lg:flex-col lg:col-span-2 lg:gap-2 bg-white border border-[#E8E5DF] rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wider">Próximos eventos</p>
+                  <button onClick={() => navigate({ to: '/calendario' })} className="text-xs font-medium text-primary-500 hover:underline">Ver todos</button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {data.contracts_expiring.slice(0, 3).map(c => (
+                    <div key={`ce-${c.id}`} className="flex justify-between items-center py-2 border-b border-[#F0EDE7] last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-[#1A1A1A]">{c.property_name}{c.property_number ? ` #${c.property_number}` : ''}</p>
+                        <p className="text-xs text-gray-400">Contrato vence · {c.tenant_name}</p>
+                      </div>
+                      <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0 ml-2">{c.days_remaining} días</span>
+                    </div>
+                  ))}
+                  {[...data.pending_1_5, ...data.pending_15_20].slice(0, 3).map((r: any) => (
+                    <div key={`pr-${r.id}`} className="flex justify-between items-center py-2 border-b border-[#F0EDE7] last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-[#1A1A1A]">{r.property_name}{r.property_number ? ` #${r.property_number}` : ''}</p>
+                        <p className="text-xs text-gray-400">Pago de renta pendiente</p>
+                      </div>
+                      <span className="text-xs font-medium text-amber-700 shrink-0 ml-2">{formatCurrency(r.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Recordatorios */}
             {(data.contracts_expiring.length > 0 ||
               data.invoices_pending > 0 ||
-              data.pending_1_5.length > 0 ||
-              data.pending_15_20.length > 0 ||
               data.services_pendientes > 0) && (
               <Section title="Recordatorios" className="lg:col-span-2">
                 <div className="flex flex-col gap-2">
@@ -192,36 +222,6 @@ function DashboardPage() {
                     </AlertCard>
                   )}
 
-                  {data.pending_1_5.length > 0 && (
-                    <AlertCard color="amber" icon={<CalendarClock size={14} />}
-                      title="Pagos pendientes días 1–5" count={data.pending_1_5.length}
-                      onClick={() => navigate({ to: '/cobranza' })}>
-                      {data.pending_1_5.map((r: any) => (
-                        <div key={r.id} className="flex justify-between items-center py-1.5 border-b border-amber-100 last:border-0">
-                          <p className="text-xs font-medium text-amber-800">
-  {r.property_name}{r.property_number ? ` #${r.property_number}` : ''}
-</p>
-                          <span className="text-xs font-medium text-amber-700">{formatCurrency(r.amount)}</span>
-                        </div>
-                      ))}
-                    </AlertCard>
-                  )}
-
-                  {data.pending_15_20.length > 0 && (
-                    <AlertCard color="amber" icon={<CalendarClock size={14} />}
-                      title="Pagos pendientes días 15–20" count={data.pending_15_20.length}
-                      onClick={() => navigate({ to: '/cobranza' })}>
-                      {data.pending_15_20.map((r: any) => (
-                        <div key={r.id} className="flex justify-between items-center py-1.5 border-b border-amber-100 last:border-0">
-                          <p className="text-xs font-medium text-amber-800">
-  {r.property_name}{r.property_number ? ` #${r.property_number}` : ''}
-</p>
-                          <span className="text-xs font-medium text-amber-700">{formatCurrency(r.amount)}</span>
-                        </div>
-                      ))}
-                    </AlertCard>
-                  )}
-
                   {data.invoices_pending > 0 && (
                     <AlertCard color="blue" icon={<AlertTriangle size={14} />}
                       title="Facturas pendientes" count={data.invoices_pending}>
@@ -232,36 +232,6 @@ function DashboardPage() {
                   )}
                 </div>
               </Section>
-            )}
-
-            {/* Próximos eventos — panel exclusivo de escritorio, resume lo más urgente */}
-            {(data.contracts_expiring.length > 0 || data.pending_1_5.length > 0 || data.pending_15_20.length > 0) && (
-              <div className="hidden lg:flex lg:flex-col lg:col-span-2 lg:gap-2 bg-white border border-[#E8E5DF] rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wider">Próximos eventos</p>
-                  <button onClick={() => navigate({ to: '/calendario' })} className="text-xs font-medium text-primary-500 hover:underline">Ver todos</button>
-                </div>
-                <div className="flex flex-col gap-1">
-                  {data.contracts_expiring.slice(0, 3).map(c => (
-                    <div key={`ce-${c.id}`} className="flex justify-between items-center py-2 border-b border-[#F0EDE7] last:border-0">
-                      <div>
-                        <p className="text-sm font-medium text-[#1A1A1A]">{c.property_name}{c.property_number ? ` #${c.property_number}` : ''}</p>
-                        <p className="text-xs text-gray-400">Contrato vence · {c.tenant_name}</p>
-                      </div>
-                      <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0 ml-2">{c.days_remaining} días</span>
-                    </div>
-                  ))}
-                  {[...data.pending_1_5, ...data.pending_15_20].slice(0, 3).map((r: any) => (
-                    <div key={`pr-${r.id}`} className="flex justify-between items-center py-2 border-b border-[#F0EDE7] last:border-0">
-                      <div>
-                        <p className="text-sm font-medium text-[#1A1A1A]">{r.property_name}{r.property_number ? ` #${r.property_number}` : ''}</p>
-                        <p className="text-xs text-gray-400">Pago de renta pendiente</p>
-                      </div>
-                      <span className="text-xs font-medium text-amber-700 shrink-0 ml-2">{formatCurrency(r.amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
 
             {data.contracts_expiring.length === 0 && data.invoices_pending === 0 &&
