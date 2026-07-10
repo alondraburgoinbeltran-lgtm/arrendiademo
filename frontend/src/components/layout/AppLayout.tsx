@@ -11,7 +11,7 @@ export function AppLayout() {
       {/* Contenido principal */}
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0">
         {/* Padding bottom para bottom nav en mobile */}
-        <div className="flex-1 pb-16 md:pb-0">
+        <div className="pb-16 md:pb-0">
           <Outlet />
         </div>
       </main>
