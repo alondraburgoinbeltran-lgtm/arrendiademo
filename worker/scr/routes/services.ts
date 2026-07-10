@@ -15,6 +15,7 @@ const serviceSchema = z.object({
   paid_at:      z.string(),
   amount:       z.number().min(0),
   status:       z.enum(['pagado', 'pendiente']).default('pagado'),
+  frequency:    z.enum(['mensual', 'bimestral', 'trimestral', 'semestral', 'anual']).default('mensual'),
   comment:      z.string().optional().nullable(),
 })
 
@@ -55,11 +56,11 @@ app.post('/', zValidator('json', serviceSchema), async (c) => {
 
   const result = await c.env.DB.prepare(`
     INSERT INTO services
-      (property_id, service_type, paid_at, amount, status, comment, excedente, excedente_status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (property_id, service_type, paid_at, amount, status, frequency, comment, excedente, excedente_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     data.property_id, data.service_type, data.paid_at,
-    data.amount, data.status, data.comment ?? null,
+    data.amount, data.status, data.frequency, data.comment ?? null,
     excedente, excedente > 0 ? 'pendiente' : 'cobrado'
   ).run()
 
@@ -95,11 +96,11 @@ app.put('/:id', zValidator('json', updateSchema), async (c) => {
   await c.env.DB.prepare(`
     UPDATE services SET
       property_id = ?, service_type = ?, paid_at = ?, amount = ?,
-      status = ?, comment = ?, excedente = ?, excedente_status = ?
+      status = ?, frequency = ?, comment = ?, excedente = ?, excedente_status = ?
     WHERE id = ?
   `).bind(
     merged.property_id, merged.service_type, merged.paid_at, merged.amount,
-    merged.status, merged.comment, excedente, excedenteStatus, id
+    merged.status, merged.frequency ?? 'mensual', merged.comment, excedente, excedenteStatus, id
   ).run()
 
   const updated = await c.env.DB.prepare(
