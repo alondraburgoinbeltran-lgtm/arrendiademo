@@ -63,6 +63,7 @@ function ExpensesPage() {
 
   const fijos   = expenses.filter(e => e.is_recurring === 1)
   const noFijos = expenses.filter(e => e.is_recurring === 0)
+  const totalGastos = expenses.reduce((s, e) => s + e.amount, 0)
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
@@ -98,6 +99,13 @@ function ExpensesPage() {
           </div>
         )}
 
+        {!isLoading && expenses.length > 0 && (
+          <div className="bg-white border border-[#E8E5DF] rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total gastos</span>
+            <span className="text-base font-bold text-[#1A1A1A]">{formatCurrency(totalGastos)}</span>
+          </div>
+        )}
+
         {fijos.length > 0 && (
           <Section title="Gastos fijos" icon={<RefreshCw size={13} />}>
             {fijos.map(e => (
@@ -129,7 +137,7 @@ function ExpensesPage() {
             </div>
           )}
           {!isLoading && expenses.length > 0 && (
-            <ExpenseTable expenses={expenses}
+            <ExpenseTable expenses={expenses} total={totalGastos}
               onEdit={openEdit}
               onDelete={e => setConfirmId(e.id)}
             />
@@ -266,8 +274,8 @@ function Section({ title, icon, children }: {
   )
 }
 
-function ExpenseTable({ expenses, onEdit, onDelete }: {
-  expenses: Expense[]; onEdit: (e: Expense) => void; onDelete: (e: Expense) => void
+function ExpenseTable({ expenses, total, onEdit, onDelete }: {
+  expenses: Expense[]; total: number; onEdit: (e: Expense) => void; onDelete: (e: Expense) => void
 }) {
   return (
     <div className="bg-white border border-[#E8E5DF] rounded-2xl overflow-hidden">
@@ -311,6 +319,13 @@ function ExpenseTable({ expenses, onEdit, onDelete }: {
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr className="border-t-2 border-[#E8E5DF] bg-[#FAF8F4]">
+            <td colSpan={3} className="px-5 py-3.5 text-sm font-bold text-[#1A1A1A] uppercase tracking-wide">Total</td>
+            <td className="px-5 py-3.5 text-sm font-bold text-[#1A1A1A] text-right">{formatCurrency(total)}</td>
+            <td colSpan={2}></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   )
