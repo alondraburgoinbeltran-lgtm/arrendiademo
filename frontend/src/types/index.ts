@@ -102,6 +102,7 @@ export interface Service {
   service_type: ServiceType
   paid_at: string
   amount: number
+  frequency: 'mensual' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'
   comment: string | null
   created_at: string
 }
@@ -111,6 +112,7 @@ export interface ServiceForm {
   service_type: ServiceType
   paid_at: string
   amount: number
+  frequency: 'mensual' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'
   comment?: string
 }
 
@@ -255,4 +257,3 @@ export interface CalendarData {
   events: CalendarEvent[]
   notes: Note[]
 }
-
