@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { Sheet } from '@/components/ui/Sheet'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/useExpenses'
 import { formatCurrency, formatDate, currentMonthYear, formatMonthYear } from '@/lib/utils'
+import { MESES, ANIOS_DISPONIBLES } from '@/lib/dateOptions'
 import type { Expense, ExpenseForm } from '@/types'
 
 export const Route = createFileRoute('/_app/gastos')({
@@ -32,13 +34,6 @@ function ExpensesPage() {
   const createMutation = useCreateExpense()
   const updateMutation = useUpdateExpense()
   const deleteMutation = useDeleteExpense()
-
-  function prevMonth() {
-    if (month === 1) { setMonth(12); setYear(y => y - 1) } else setMonth(m => m - 1)
-  }
-  function nextMonth() {
-    if (month === 12) { setMonth(1); setYear(y => y + 1) } else setMonth(m => m + 1)
-  }
 
   function openNew() {
     setEditing(null)
@@ -76,15 +71,16 @@ function ExpensesPage() {
         title="Gastos"
         subtitle={formatMonthYear(month, year)}
         action={
-          <div className="flex items-center gap-1">
-            <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10">
-              <ChevronLeft size={14} className="text-white" />
-            </button>
-            <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10">
-              <ChevronRight size={14} className="text-white" />
-            </button>
-            <button onClick={openNew} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 ml-1">
-              <Plus size={14} className="text-white" />
+          <div className="flex items-end flex-wrap justify-end gap-2 lg:gap-3">
+            <HeaderSelect label="Mes" value={month} onChange={setMonth} options={MESES} />
+            <HeaderSelect
+              label="Año"
+              value={year}
+              onChange={setYear}
+              options={ANIOS_DISPONIBLES.map(y => ({ value: y, label: String(y) }))}
+            />
+            <button onClick={openNew} className="h-9 lg:h-10 w-9 lg:w-10 flex items-center justify-center rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition-colors shrink-0">
+              <Plus size={16} className="text-white" />
             </button>
           </div>
         }
