@@ -201,6 +201,8 @@ export interface DashboardData {
   invoices_pending: number
   pending_1_5: any[]
   pending_15_20: any[]
+  paid_1_5: any[]
+  paid_15_20: any[]
   expenses_total: number
   expenses_pendientes: number
 }
