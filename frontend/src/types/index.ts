@@ -103,6 +103,8 @@ export interface Service {
   paid_at: string
   amount: number
   frequency: 'mensual' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'
+  period_month: number
+  period_year: number
   comment: string | null
   created_at: string
 }
@@ -113,6 +115,8 @@ export interface ServiceForm {
   paid_at: string
   amount: number
   frequency: 'mensual' | 'bimestral' | 'trimestral' | 'semestral' | 'anual'
+  period_month: number
+  period_year: number
   comment?: string
 }
 
