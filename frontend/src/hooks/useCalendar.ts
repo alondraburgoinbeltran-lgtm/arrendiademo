@@ -37,6 +37,30 @@ export function useDeleteReminder() {
   })
 }
 
+export function useMarkInvoiceDone() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ property_id, month, year }: { property_id: number; month: number; year: number }) =>
+      api.put('/calendar/invoices/done', { property_id, month, year }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['calendar'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useUndoInvoiceDone() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ property_id, month, year }: { property_id: number; month: number; year: number }) =>
+      api.put('/calendar/invoices/undo', { property_id, month, year }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['calendar'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
 export function useCreateNote() {
   const qc = useQueryClient()
   return useMutation({
