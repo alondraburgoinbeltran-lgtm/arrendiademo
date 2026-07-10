@@ -142,13 +142,10 @@ function DashboardPage() {
               </div>
             )}
 
-            {/* Quincenas */}
-            <Section title="Ingresos por quincena" className="lg:contents">
-              <div className="grid grid-cols-2 gap-3 lg:contents">
-                <QuincenaCard label="1a quincena" sub="Días 1–15" value={data.quincena1_total} />
-                <QuincenaCard label="2a quincena" sub="Días 16–31" value={data.quincena2_total} />
-              </div>
-            </Section>
+            {/* Cobros por periodo — detalle por propiedad, sin perder historial */}
+            <div className="lg:col-span-2">
+              <CobrosPorPeriodoCard data={data} />
+            </div>
 
             {/* Cuentas bancarias */}
             <Section title="Por cuenta bancaria" className="lg:contents">
@@ -296,7 +293,7 @@ function KpiCard({ label, value, sub, color, icon, onClick }: {
       <div className={`w-7 h-7 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl flex items-center justify-center ${colors[color]}`}>{icon}</div>
       <div>
         <p className="text-[12px] lg:text-sm font-semibold text-[#1A1A1A]">{label}</p>
-        <p className="text-[20px] lg:text-3xl font-bold text-[#1A1A1A] leading-tight mt-0.5">{value}</p>
+        <p className="text-[20px] lg:text-2xl font-bold text-[#1A1A1A] leading-tight mt-0.5">{value}</p>
         <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] mt-0.5">{sub}</p>
       </div>
     </button>
@@ -318,12 +315,94 @@ function KpiCardWide({ label, value, sub, icon, className }: {
   )
 }
 
-function QuincenaCard({ label, sub, value }: { label: string; sub: string; value: number }) {
+function CobrosPorPeriodoCard({ data }: { data: any }) {
+  const [tab, setTab] = useState<'1_5' | '15_20'>('1_5')
+
+  const paid    = tab === '1_5' ? data.paid_1_5    : data.paid_15_20
+  const pending = tab === '1_5' ? data.pending_1_5 : data.pending_15_20
+
+  const items = [
+    ...paid.map((r: any) => ({ ...r, _status: 'paid' as const })),
+    ...pending.map((r: any) => ({ ...r, _status: 'pending' as const })),
+  ].sort((a: any, b: any) => (a.property_name || '').localeCompare(b.property_name || ''))
+
+  const totalCobrado   = paid.reduce((s: number, r: any) => s + r.amount, 0)
+  const totalPendiente = pending.reduce((s: number, r: any) => s + r.amount, 0)
+  const totalEsperado  = totalCobrado + totalPendiente
+
   return (
-    <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-3.5 lg:p-5 lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
-      <p className="text-[12px] lg:text-sm font-semibold text-[#1A1A1A]">{label}</p>
-      <p className="text-[10px] lg:text-xs text-gray-400 mb-1">{sub}</p>
-      <p className="text-[16px] lg:text-2xl font-bold text-[#1A1A1A]">{formatCurrency(value)}</p>
+    <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl overflow-hidden lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
+      <div className="px-4 py-3 lg:px-5 lg:py-3.5 border-b border-[#E8E5DF]">
+        <p className="text-sm lg:text-base font-bold text-[#1A1A1A]">
+          Cobros por periodo <span className="text-gray-400 font-normal">(quincenas)</span>
+        </p>
+      </div>
+
+      <div className="p-3 lg:p-4">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setTab('1_5')}
+            className={`flex-1 text-xs lg:text-sm font-bold py-2 rounded-lg border transition-colors ${
+              tab === '1_5' ? 'bg-primary-500 text-white border-primary-500' : 'border-[#E8E5DF] text-gray-500'
+            }`}
+          >
+            Días 1–5
+          </button>
+          <button
+            onClick={() => setTab('15_20')}
+            className={`flex-1 text-xs lg:text-sm font-bold py-2 rounded-lg border transition-colors ${
+              tab === '15_20' ? 'bg-primary-500 text-white border-primary-500' : 'border-[#E8E5DF] text-gray-500'
+            }`}
+          >
+            Días 15–20
+          </button>
+        </div>
+
+        {/* Resumen */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          <div className="bg-[#FAFAF8] rounded-lg p-2">
+            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Esperado</p>
+            <p className="text-xs lg:text-sm font-bold text-[#1A1A1A] mt-0.5">{formatCurrency(totalEsperado)}</p>
+          </div>
+          <div className="bg-[#FAFAF8] rounded-lg p-2">
+            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cobrado</p>
+            <p className="text-xs lg:text-sm font-bold text-green-700 mt-0.5">{formatCurrency(totalCobrado)}</p>
+          </div>
+          <div className="bg-[#FAFAF8] rounded-lg p-2">
+            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pendiente</p>
+            <p className="text-xs lg:text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(totalPendiente)}</p>
+          </div>
+          <div className="bg-[#FAFAF8] rounded-lg p-2">
+            <p className="text-[9px] lg:text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Propiedades</p>
+            <p className="text-xs lg:text-sm font-bold text-[#1A1A1A] mt-0.5">{items.length}</p>
+          </div>
+        </div>
+
+        {/* Detalle por propiedad — nunca se elimina, solo cambia el estado */}
+        {items.length === 0 ? (
+          <p className="text-xs text-gray-400 text-center py-4">Sin propiedades en este periodo</p>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {items.map((r: any) => (
+              <div key={`${r._status}-${r.id}`} className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-[#FAFAF8]">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r._status === 'paid' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                  <span className="text-xs font-semibold text-[#1A1A1A] truncate">
+                    {r.property_name}{r.property_number ? ` #${r.property_number}` : ''}
+                  </span>
+                  <span className="text-xs text-gray-400 shrink-0">{formatCurrency(r.amount)}</span>
+                </div>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                  r._status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {r._status === 'paid' ? 'Cobrado' : 'Pendiente'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -333,8 +412,8 @@ function BankCard({ bank, value, color }: { bank: string; value: number; color: 
     <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-3.5 lg:p-5 flex items-center gap-3 lg:gap-4 lg:transition-all lg:duration-200 lg:hover:-translate-y-[1px]">
       <div className="w-3 h-3 lg:w-4 lg:h-4 rounded-full shrink-0" style={{ background: color }} />
       <div>
-        <p className="text-[11px] lg:text-sm text-gray-400">{bank}</p>
-        <p className="text-[14px] lg:text-2xl font-bold text-[#1A1A1A]">{formatCurrency(value)}</p>
+        <p className="text-[12px] lg:text-sm font-semibold text-gray-400">{bank}</p>
+        <p className="text-[20px] lg:text-2xl font-bold text-[#1A1A1A]">{formatCurrency(value)}</p>
       </div>
     </div>
   )
