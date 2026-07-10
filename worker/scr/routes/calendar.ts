@@ -63,9 +63,9 @@ app.get('/', async (c) => {
 
     const { results: invoiceProps } = await c.env.DB.prepare(`
       SELECT p.id, p.name, p.number, p.payment_day,
-             r.id AS rent_id, r.status AS rent_status
+             i.status AS invoice_status
       FROM properties p
-      LEFT JOIN rents r ON r.property_id = p.id AND r.month = ? AND r.year = ?
+      LEFT JOIN invoices i ON i.property_id = p.id AND i.month = ? AND i.year = ?
       WHERE p.requires_invoice = 1 AND p.active = 1
     `).bind(month, year).all()
 
@@ -73,12 +73,12 @@ app.get('/', async (c) => {
       const day = Math.max(1, (p.payment_day || 5) - 3)
       return {
         id:        `invoice-${p.id}-${month}-${year}`,
-        ref_id:    p.rent_id,
+        ref_id:    p.id,
         ref_type:  'invoice',
         type:      'invoice',
         title:     `Factura · ${p.name}${p.number ? ` #${p.number}` : ''}`,
         date:      `${yearStr}-${monthPad}-${String(day).padStart(2, '0')}`,
-        status:    p.rent_status === 'paid' ? 'done' : 'pending',
+        status:    p.invoice_status === 'done' ? 'done' : 'pending',
         property_name:   p.name,
         property_number: p.number,
       }
@@ -114,6 +114,33 @@ app.get('/', async (c) => {
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
   }
+})
+
+// PUT /calendar/invoices/done — marcar factura como hecha (independiente de cobranza)
+app.put('/invoices/done', async (c) => {
+  const { property_id, month, year } = await c.req.json()
+  const today = new Date().toISOString().split('T')[0]
+
+  await c.env.DB.prepare(`
+    INSERT INTO invoices (property_id, month, year, status, done_at)
+    VALUES (?, ?, ?, 'done', ?)
+    ON CONFLICT(property_id, month, year) DO UPDATE SET status = 'done', done_at = excluded.done_at
+  `).bind(property_id, month, year, today).run()
+
+  return c.json({ message: 'Factura marcada como hecha' })
+})
+
+// PUT /calendar/invoices/undo — revertir a pendiente
+app.put('/invoices/undo', async (c) => {
+  const { property_id, month, year } = await c.req.json()
+
+  await c.env.DB.prepare(`
+    INSERT INTO invoices (property_id, month, year, status, done_at)
+    VALUES (?, ?, ?, 'pending', NULL)
+    ON CONFLICT(property_id, month, year) DO UPDATE SET status = 'pending', done_at = NULL
+  `).bind(property_id, month, year).run()
+
+  return c.json({ message: 'Factura marcada como pendiente' })
 })
 
 // POST /calendar/reminders
