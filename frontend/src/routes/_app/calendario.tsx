@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   ChevronLeft, ChevronRight, Plus, Check, Trash2,
-  Pencil, FileText, Home, RefreshCw, Receipt, StickyNote, Bell,
+  Pencil, FileText, Home, RefreshCw, Receipt, StickyNote, Bell, RotateCcw,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Sheet } from '@/components/ui/Sheet'
@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   useCalendar, useCreateReminder, useMarkReminderDone,
   useDeleteReminder, useCreateNote, useUpdateNote, useDeleteNote,
+  useMarkInvoiceDone, useUndoInvoiceDone,
 } from '@/hooks/useCalendar'
 import { useProperties } from '@/hooks/useProperties'
 import { formatCurrency, currentMonthYear, formatMonthYear } from '@/lib/utils'
@@ -50,6 +51,8 @@ function CalendarioPage() {
   const createReminder  = useCreateReminder()
   const markDone        = useMarkReminderDone()
   const deleteReminder  = useDeleteReminder()
+  const markInvoiceDone = useMarkInvoiceDone()
+  const undoInvoiceDone = useUndoInvoiceDone()
   const createNote      = useCreateNote()
   const updateNote      = useUpdateNote()
   const deleteNote      = useDeleteNote()
@@ -183,12 +186,17 @@ function CalendarioPage() {
                   <div className="flex flex-col gap-2 flex-1 pb-1 pt-0.5">
                     {grouped[day].map(ev => (
                       <EventCard key={ev.id} event={ev}
-                        onDone={() => markDone.mutate(ev.ref_id)}
+                        onDone={() => {
+                          if (ev.type === 'reminder') markDone.mutate(ev.ref_id)
+                          if (ev.type === 'invoice')  markInvoiceDone.mutate({ property_id: ev.ref_id, month, year })
+                        }}
+                        onUndo={() => {
+                          if (ev.type === 'invoice') undoInvoiceDone.mutate({ property_id: ev.ref_id, month, year })
+                        }}
                         onDelete={() => setConfirmId(ev.ref_id)}
                         onNavigate={() => {
                           if (ev.type === 'rent') navigate({ to: '/cobranza' })
                           if (ev.type === 'contract') navigate({ to: '/contratos' })
-                          if (ev.type === 'invoice') navigate({ to: '/cobranza' })
                         }}
                       />
                     ))}
@@ -307,9 +315,10 @@ const EVENT_ICONS: Record<string, React.ReactNode> = {
   reminder: <Bell size={12} />,
 }
 
-function EventCard({ event: ev, onDone, onDelete, onNavigate }: {
+function EventCard({ event: ev, onDone, onUndo, onDelete, onNavigate }: {
   event: CalendarEvent
   onDone: () => void
+  onUndo: () => void
   onDelete: () => void
   onNavigate: () => void
 }) {
@@ -343,7 +352,13 @@ function EventCard({ event: ev, onDone, onDelete, onNavigate }: {
             <Check size={11} />
           </button>
         )}
-        {(ev.type === 'rent' || ev.type === 'contract' || ev.type === 'invoice') && (
+        {isDone && ev.type === 'invoice' && (
+          <button onClick={onUndo} title="Marcar como pendiente"
+            className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-50 text-gray-400 border border-[#E8E5DF]">
+            <RotateCcw size={11} />
+          </button>
+        )}
+        {(ev.type === 'rent' || ev.type === 'contract') && (
           <button onClick={onNavigate}
             className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-50 text-gray-400 border border-[#E8E5DF] text-[10px] font-bold">
             →
@@ -359,3 +374,4 @@ function EventCard({ event: ev, onDone, onDelete, onNavigate }: {
     </div>
   )
 }
+
