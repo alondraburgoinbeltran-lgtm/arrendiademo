@@ -5,30 +5,14 @@ import {
   Home, Clock,
   TrendingUp, Wrench, FileText, AlertTriangle,
   Zap, TrendingDown,
-  Receipt, ChevronDown, RefreshCw,
+  Receipt, RefreshCw,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useMarcarExcedenteCobrado } from '@/hooks/useServices'
 import { formatCurrency, formatDate, currentMonthYear } from '@/lib/utils'
-
-const MESES = [
-  { value: 1,  label: 'Enero' },
-  { value: 2,  label: 'Febrero' },
-  { value: 3,  label: 'Marzo' },
-  { value: 4,  label: 'Abril' },
-  { value: 5,  label: 'Mayo' },
-  { value: 6,  label: 'Junio' },
-  { value: 7,  label: 'Julio' },
-  { value: 8,  label: 'Agosto' },
-  { value: 9,  label: 'Septiembre' },
-  { value: 10, label: 'Octubre' },
-  { value: 11, label: 'Noviembre' },
-  { value: 12, label: 'Diciembre' },
-]
-
-// Agrega más años aquí cuando se necesiten (ej. 2029, 2030, ...)
-const ANIOS_DISPONIBLES = [2024, 2025, 2026, 2027, 2028]
+import { MESES, ANIOS_DISPONIBLES } from '@/lib/dateOptions'
 
 export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
@@ -273,31 +257,6 @@ function DashboardPage() {
   )
 }
 
-function HeaderSelect({ label, value, onChange, options }: {
-  label: string
-  value: number
-  onChange: (value: number) => void
-  options: { value: number; label: string }[]
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[9px] lg:text-[10px] font-semibold text-white/50 uppercase tracking-wider px-0.5">{label}</span>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="h-9 lg:h-10 w-[88px] lg:w-[130px] appearance-none bg-white/10 border border-white/15 rounded-lg pl-3 pr-8 text-xs lg:text-sm font-semibold text-white cursor-pointer transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
-        >
-          {options.map(o => (
-            <option key={o.value} value={o.value} className="text-[#1A1A1A]">{o.label}</option>
-          ))}
-        </select>
-        <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70" />
-      </div>
-    </label>
-  )
-}
-
 function KpiCard({ label, value, sub, color, icon, onClick }: {
   label: string; value: string; sub: string
   color: 'green' | 'amber' | 'blue' | 'gray' | 'purple'
@@ -459,4 +418,3 @@ function AlertCard({ color, icon, title, count, children, onClick }: {
     </div>
   )
 }
-
