@@ -657,7 +657,7 @@ function RentTable({ rents, month, year, onPay, onUnpay, onDelete }: {
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Estatus</th>
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Método pago</th>
               <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Cuenta</th>
-              <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
+              <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide px-5 py-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -675,7 +675,7 @@ function RentTable({ rents, month, year, onPay, onUnpay, onDelete }: {
                   <td className="px-5 py-4 text-sm text-gray-600 capitalize truncate">{isPaid ? (r.payment_method ?? '—') : '—'}</td>
                   <td className="px-5 py-4 text-sm text-gray-600 uppercase">{isPaid && r.payment_method === 'transferencia' ? (r.bank_account ?? '—') : '—'}</td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center justify-end gap-1.5">
+                    <div className="flex items-center justify-center gap-1.5">
                       {!isPaid && (
                         <button onClick={() => onPay(r)}
                           className="h-8 flex items-center gap-1.5 bg-primary-500 text-white text-xs font-medium rounded-lg px-3 transition-all duration-200 hover:-translate-y-[1px]">
