@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
-  ChevronLeft, ChevronRight, Plus, Check, Trash2,
+  Plus, Check, Trash2,
   Pencil, FileText, Home, RefreshCw, Receipt, StickyNote, Bell, RotateCcw,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { Sheet } from '@/components/ui/Sheet'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
@@ -13,7 +14,8 @@ import {
   useMarkInvoiceDone, useUndoInvoiceDone,
 } from '@/hooks/useCalendar'
 import { useProperties } from '@/hooks/useProperties'
-import { formatCurrency, currentMonthYear, formatMonthYear } from '@/lib/utils'
+import { formatCurrency, currentMonthYear } from '@/lib/utils'
+import { MESES, ANIOS_DISPONIBLES } from '@/lib/dateOptions'
 import type { CalendarEvent, Note, ReminderForm } from '@/types'
 
 export const Route = createFileRoute('/_app/calendario')({
@@ -28,9 +30,6 @@ const FREQ_OPTIONS = [
   { value: '1y', label: 'Cada año' },
 ]
 
-const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-
 function CalendarioPage() {
   const now = currentMonthYear()
   const [month, setMonth] = useState(now.month)
@@ -42,6 +41,7 @@ function CalendarioPage() {
   const [editNote, setEditNote]         = useState<Note | null>(null)
   const [noteContent, setNoteContent]   = useState('')
   const [confirmId, setConfirmId]       = useState<number | null>(null)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'done'>('all')
   const [form, setForm]                 = useState<ReminderForm>({
     title: '', reminder_date: '', frequency: '',
   })
@@ -56,13 +56,6 @@ function CalendarioPage() {
   const createNote      = useCreateNote()
   const updateNote      = useUpdateNote()
   const deleteNote      = useDeleteNote()
-
-  function prevMonth() {
-    if (month === 1) { setMonth(12); setYear(y => y - 1) } else setMonth(m => m - 1)
-  }
-  function nextMonth() {
-    if (month === 12) { setMonth(1); setYear(y => y + 1) } else setMonth(m => m + 1)
-  }
 
   async function handleCreateReminder() {
     if (!form.title || !form.reminder_date) return
@@ -87,8 +80,17 @@ function CalendarioPage() {
     setNoteContent('')
   }
 
+  // Filtro de estado — solo afecta la lista, no las notas ni los datos consultados
+  const allEvents    = data?.events ?? []
+  const totalCount   = allEvents.length
+  const pendingCount = allEvents.filter(e => e.status !== 'done').length
+  const doneCount    = allEvents.filter(e => e.status === 'done').length
+  const visibleEvents = statusFilter === 'all' ? allEvents
+    : statusFilter === 'pending' ? allEvents.filter(e => e.status !== 'done')
+    : allEvents.filter(e => e.status === 'done')
+
   // Agrupar eventos por día
-  const grouped = (data?.events ?? []).reduce((acc, ev) => {
+  const grouped = visibleEvents.reduce((acc, ev) => {
     const d = ev.date
     if (!acc[d]) acc[d] = []
     acc[d].push(ev)
@@ -102,108 +104,120 @@ function CalendarioPage() {
     <div>
       <PageHeader
         title="Calendario"
-        subtitle={formatMonthYear(month, year)}
         action={
-          <div className="flex items-center gap-1">
-            <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10">
-              <ChevronLeft size={14} className="text-white" />
-            </button>
-            <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10">
-              <ChevronRight size={14} className="text-white" />
-            </button>
-            <button onClick={() => setSheetOpen(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 ml-1">
-              <Plus size={14} className="text-white" />
+          <div className="flex items-end flex-wrap justify-end gap-2 lg:gap-3">
+            <HeaderSelect label="Mes" value={month} onChange={setMonth} options={MESES} />
+            <HeaderSelect
+              label="Año"
+              value={year}
+              onChange={setYear}
+              options={ANIOS_DISPONIBLES.map(y => ({ value: y, label: String(y) }))}
+            />
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="h-9 lg:h-10 w-9 lg:w-10 flex items-center justify-center rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition-colors shrink-0"
+            >
+              <Plus size={16} className="text-white" />
             </button>
           </div>
         }
       />
 
-      <div className="px-4 py-4 flex flex-col gap-4 lg:px-8 xl:px-10 lg:py-6 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:grid lg:grid-cols-10 lg:gap-5 xl:gap-6 lg:items-start">
+      <div className="px-4 py-3 flex flex-col gap-4 lg:px-8 xl:px-10 lg:py-5 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:h-[calc(100dvh-112px)] lg:grid lg:grid-cols-10 lg:gap-5 xl:gap-6 lg:items-stretch">
         {isLoading && <div className="py-16 text-center text-sm text-gray-400 lg:col-span-10">Cargando...</div>}
 
-        {/* Notas fijas — 30% a la derecha en escritorio */}
-        {(data?.notes ?? []).length > 0 && (
-          <div className="flex flex-col gap-2 lg:col-span-3 lg:order-2 lg:sticky lg:top-6">
-            <div className="flex items-center justify-between">
+        {/* Lista del calendario — 70% en escritorio, aparece primero en móvil */}
+        {!isLoading && (
+          <div className="lg:col-span-7 lg:h-full lg:min-h-0 lg:flex lg:flex-col">
+            {/* Chips de filtro — solo afectan esta lista */}
+            <div className="flex gap-2 mb-3 shrink-0 flex-wrap">
+              <FilterChip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}
+                label={`Todos (${totalCount})`} />
+              <FilterChip active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')}
+                label={`Pendiente (${pendingCount})`} dot="amber" />
+              <FilterChip active={statusFilter === 'done'} onClick={() => setStatusFilter('done')}
+                label={`Hecho (${doneCount})`} dot="green" />
+            </div>
+
+            <div className="bg-white border border-[#E8E5DF] rounded-2xl p-4 lg:p-5 flex-1 lg:min-h-0 lg:overflow-y-auto">
+              {sortedDays.length === 0 && (
+                <div className="py-12 text-center text-sm text-gray-400">Sin eventos este mes</div>
+              )}
+              {sortedDays.map(day => {
+                const isToday = day === todayStr
+                const d       = new Date(day + 'T12:00:00')
+                const dd      = d.getDate()
+                const dow     = ['dom','lun','mar','mié','jue','vie','sáb'][d.getDay()]
+                return (
+                  <div key={day} className="flex gap-3 mb-3 last:mb-0">
+                    {/* Fecha */}
+                    <div className="w-9 shrink-0 flex flex-col items-center pt-1">
+                      <span className={`text-[15px] font-bold leading-none ${isToday ? 'text-[#C5A880]' : 'text-[#2C3E50]'}`}>{dd}</span>
+                      <span className={`text-[9px] font-medium mt-0.5 ${isToday ? 'text-[#C5A880]' : 'text-gray-400'}`}>{dow}</span>
+                    </div>
+                    {/* Línea */}
+                    <div className={`w-px self-stretch mt-1.5 ${isToday ? 'bg-[#C5A880]' : 'bg-[#E8E5DF]'}`} />
+                    {/* Eventos */}
+                    <div className="flex flex-col gap-2 flex-1 pb-1 pt-0.5">
+                      {grouped[day].map(ev => (
+                        <EventCard key={ev.id} event={ev}
+                          onDone={() => {
+                            if (ev.type === 'reminder') markDone.mutate(ev.ref_id)
+                            if (ev.type === 'invoice')  markInvoiceDone.mutate({ property_id: ev.ref_id, month, year })
+                          }}
+                          onUndo={() => {
+                            if (ev.type === 'invoice') undoInvoiceDone.mutate({ property_id: ev.ref_id, month, year })
+                          }}
+                          onDelete={() => setConfirmId(ev.ref_id)}
+                          onNavigate={() => {
+                            if (ev.type === 'rent') navigate({ to: '/cobranza' })
+                            if (ev.type === 'contract') navigate({ to: '/contratos' })
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Notas fijas — 30% en escritorio, debajo de la lista en móvil */}
+        {!isLoading && (
+          <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:flex lg:flex-col mt-4 lg:mt-0">
+            <div className="flex items-center justify-between mb-2 shrink-0">
               <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] uppercase tracking-wider">Notas</p>
               <button onClick={() => { setEditNote(null); setNoteContent(''); setNoteSheetOpen(true) }}
                 className="text-[10px] lg:text-xs font-semibold text-[#C5A880] flex items-center gap-1">
                 <Plus size={10} /> Nueva nota
               </button>
             </div>
-            {data!.notes.map(n => (
-              <div key={n.id} className="bg-amber-50 border border-amber-200 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-4 lg:py-3 flex items-start gap-2">
-                <StickyNote size={13} className="text-amber-500 mt-0.5 shrink-0" />
-                <p className="text-xs lg:text-sm text-amber-800 flex-1 leading-relaxed">{n.content}</p>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => { setEditNote(n); setNoteContent(n.content); setNoteSheetOpen(true) }}
-                    className="text-amber-400 hover:text-amber-600 p-0.5">
-                    <Pencil size={12} />
-                  </button>
-                  <button onClick={() => deleteNote.mutate(n.id)} className="text-amber-300 hover:text-red-500 p-0.5">
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {/* Botón nueva nota si no hay ninguna */}
-        {(data?.notes ?? []).length === 0 && !isLoading && (
-          <button onClick={() => { setEditNote(null); setNoteContent(''); setNoteSheetOpen(true) }}
-            className="flex items-center gap-2 bg-amber-50 border border-dashed border-amber-300 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-4 lg:py-3 text-xs lg:text-sm text-amber-600 font-medium lg:col-span-3 lg:order-2 lg:sticky lg:top-6">
-            <StickyNote size={13} />
-            Agregar nota fija
-          </button>
-        )}
-
-        {/* Timeline — 70% a la izquierda en escritorio */}
-        {!isLoading && sortedDays.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-400 lg:col-span-7 lg:order-1">Sin eventos este mes</div>
-        )}
-
-        {sortedDays.length > 0 && (
-          <div className="flex flex-col gap-0 lg:col-span-7 lg:order-1">
-            <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">
-              {MONTHS[month - 1]} {year}
-            </p>
-            {sortedDays.map(day => {
-              const isToday = day === todayStr
-              const d       = new Date(day + 'T12:00:00')
-              const dd      = d.getDate()
-              const dow     = ['dom','lun','mar','mié','jue','vie','sáb'][d.getDay()]
-              return (
-                <div key={day} className="flex gap-3 mb-3">
-                  {/* Fecha */}
-                  <div className="w-9 shrink-0 flex flex-col items-center pt-1">
-                    <span className={`text-[15px] font-bold leading-none ${isToday ? 'text-[#C5A880]' : 'text-[#2C3E50]'}`}>{dd}</span>
-                    <span className={`text-[9px] font-medium mt-0.5 ${isToday ? 'text-[#C5A880]' : 'text-gray-400'}`}>{dow}</span>
-                  </div>
-                  {/* Línea */}
-                  <div className={`w-px self-stretch mt-1.5 ${isToday ? 'bg-[#C5A880]' : 'bg-[#E8E5DF]'}`} />
-                  {/* Eventos */}
-                  <div className="flex flex-col gap-2 flex-1 pb-1 pt-0.5">
-                    {grouped[day].map(ev => (
-                      <EventCard key={ev.id} event={ev}
-                        onDone={() => {
-                          if (ev.type === 'reminder') markDone.mutate(ev.ref_id)
-                          if (ev.type === 'invoice')  markInvoiceDone.mutate({ property_id: ev.ref_id, month, year })
-                        }}
-                        onUndo={() => {
-                          if (ev.type === 'invoice') undoInvoiceDone.mutate({ property_id: ev.ref_id, month, year })
-                        }}
-                        onDelete={() => setConfirmId(ev.ref_id)}
-                        onNavigate={() => {
-                          if (ev.type === 'rent') navigate({ to: '/cobranza' })
-                          if (ev.type === 'contract') navigate({ to: '/contratos' })
-                        }}
-                      />
-                    ))}
+            <div className="flex flex-col gap-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-0.5">
+              {(data?.notes ?? []).length === 0 && (
+                <button onClick={() => { setEditNote(null); setNoteContent(''); setNoteSheetOpen(true) }}
+                  className="flex items-center gap-2 bg-amber-50 border border-dashed border-amber-300 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-4 lg:py-3 text-xs lg:text-sm text-amber-600 font-medium">
+                  <StickyNote size={13} />
+                  Agregar nota fija
+                </button>
+              )}
+              {(data?.notes ?? []).map(n => (
+                <div key={n.id} className="bg-amber-50 border border-amber-200 rounded-xl lg:rounded-2xl px-3 py-2.5 lg:px-4 lg:py-3 flex items-start gap-2 shrink-0">
+                  <StickyNote size={13} className="text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-xs lg:text-sm text-amber-800 flex-1 leading-relaxed">{n.content}</p>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => { setEditNote(n); setNoteContent(n.content); setNoteSheetOpen(true) }}
+                      className="text-amber-400 hover:text-amber-600 p-0.5">
+                      <Pencil size={12} />
+                    </button>
+                    <button onClick={() => deleteNote.mutate(n.id)} className="text-amber-300 hover:text-red-500 p-0.5">
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -301,6 +315,21 @@ function CalendarioPage() {
   )
 }
 
+function FilterChip({ active, onClick, label, dot }: {
+  active: boolean; onClick: () => void; label: string; dot?: 'amber' | 'green'
+}) {
+  return (
+    <button onClick={onClick}
+      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs lg:text-sm font-semibold transition-colors ${
+        active ? 'bg-primary-500 text-white' : 'bg-white border border-[#E8E5DF] text-gray-600 hover:bg-gray-50'
+      }`}
+    >
+      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot === 'amber' ? 'bg-amber-500' : 'bg-green-500'}`} />}
+      {label}
+    </button>
+  )
+}
+
 const EVENT_COLORS: Record<string, string> = {
   rent:     '#F59E0B',
   invoice:  '#3B82F6',
@@ -374,4 +403,3 @@ function EventCard({ event: ev, onDone, onUndo, onDelete, onNavigate }: {
     </div>
   )
 }
-
