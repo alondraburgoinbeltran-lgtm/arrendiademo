@@ -252,21 +252,24 @@ function DashboardPage() {
                       ))}
                     </AlertCard>
                   )}
-
-                  {notes.length > 0 && (
-                    <AlertCard color="amber" icon={<StickyNote size={14} />}
-                      title="Notas fijas" count={notes.length}
-                      onClick={() => navigate({ to: '/calendario' })}>
-                      {notes.map(n => (
-                        <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-amber-100 last:border-0">
-                          <StickyNote size={11} className="text-amber-500 mt-0.5 shrink-0" />
-                          <p className="text-xs text-amber-800 leading-snug line-clamp-2">{n.content}</p>
-                        </div>
-                      ))}
-                    </AlertCard>
-                  )}
                 </div>
               </Section>
+            )}
+
+            {/* Notas fijas — tarjeta independiente, a la derecha de Recordatorios (misma fila) */}
+            {notes.length > 0 && (
+              <div className="lg:col-span-2 lg:self-stretch">
+                <AlertCard color="amber" icon={<StickyNote size={14} />}
+                  title="Notas fijas" count={notes.length}
+                  onClick={() => navigate({ to: '/calendario' })}>
+                  {notes.map(n => (
+                    <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-amber-100 last:border-0">
+                      <StickyNote size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-amber-800 leading-snug line-clamp-2">{n.content}</p>
+                    </div>
+                  ))}
+                </AlertCard>
+              </div>
             )}
 
             {data.contracts_expiring.length === 0 && data.invoices_pending.length === 0 &&
