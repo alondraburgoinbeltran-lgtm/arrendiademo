@@ -5,13 +5,13 @@ import {
   Home, Clock,
   TrendingUp, Wrench, FileText, AlertTriangle,
   Zap, TrendingDown,
-  Receipt, RefreshCw, StickyNote,
+  Receipt, RefreshCw, StickyNote, Trash2,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useMarcarExcedenteCobrado } from '@/hooks/useServices'
-import { useMarkInvoiceDone, useCalendar } from '@/hooks/useCalendar'
+import { useMarkInvoiceDone, useCalendar, useDeleteNote } from '@/hooks/useCalendar'
 import { formatCurrency, formatDate, currentMonthYear } from '@/lib/utils'
 import { MESES, ANIOS_DISPONIBLES } from '@/lib/dateOptions'
 
@@ -26,6 +26,7 @@ function DashboardPage() {
   const navigate = useNavigate()
   const excedenteMutation = useMarcarExcedenteCobrado()
   const markInvoiceDone = useMarkInvoiceDone()
+  const deleteNote = useDeleteNote()
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useDashboard(month, year)
@@ -200,8 +201,7 @@ function DashboardPage() {
             {/* Recordatorios */}
             {(data.contracts_expiring.length > 0 ||
               data.invoices_pending.length > 0 ||
-              data.services_pendientes > 0 ||
-              notes.length > 0) && (
+              data.services_pendientes > 0) && (
               <Section title="Recordatorios" className="lg:col-span-2">
                 <div className="flex flex-col gap-2">
 
@@ -260,12 +260,20 @@ function DashboardPage() {
             {notes.length > 0 && (
               <div className="lg:col-span-2 lg:self-stretch">
                 <AlertCard color="amber" icon={<StickyNote size={14} />}
-                  title="Notas fijas" count={notes.length}
-                  onClick={() => navigate({ to: '/calendario' })}>
+                  title="Notas fijas" count={notes.length}>
                   {notes.map(n => (
-                    <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-amber-100 last:border-0">
-                      <StickyNote size={11} className="text-amber-500 mt-0.5 shrink-0" />
-                      <p className="text-xs text-amber-800 leading-snug line-clamp-2">{n.content}</p>
+                    <div key={n.id} className="flex items-start justify-between gap-2 py-1.5 border-b border-amber-100 last:border-0">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <StickyNote size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                        <p className="text-xs font-medium text-amber-800 leading-snug">{n.content}</p>
+                      </div>
+                      <button
+                        onClick={() => deleteNote.mutate(n.id)}
+                        disabled={deleteNote.isPending}
+                        className="text-amber-300 hover:text-red-500 p-0.5 shrink-0 disabled:opacity-50"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   ))}
                 </AlertCard>
