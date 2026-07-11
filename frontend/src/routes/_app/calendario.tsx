@@ -123,12 +123,12 @@ function CalendarioPage() {
         }
       />
 
-      <div className="px-4 py-3 flex flex-col gap-4 lg:px-8 xl:px-10 lg:py-5 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:h-[calc(100dvh-112px)] lg:grid lg:grid-cols-10 lg:gap-5 xl:gap-6 lg:items-stretch">
-        {isLoading && <div className="py-16 text-center text-sm text-gray-400 lg:col-span-10">Cargando...</div>}
+      <div className="px-4 py-3 flex flex-col gap-4 lg:px-8 xl:px-10 lg:py-5 lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto lg:h-[calc(100dvh-112px)] lg:flex-row lg:gap-5 xl:gap-6">
+        {isLoading && <div className="py-16 text-center text-sm text-gray-400 w-full">Cargando...</div>}
 
         {/* Lista del calendario — 70% en escritorio, aparece primero en móvil */}
         {!isLoading && (
-          <div className="lg:col-span-7 lg:h-full lg:min-h-0 lg:flex lg:flex-col">
+          <div className="lg:w-[70%] lg:h-full lg:min-h-0 lg:flex lg:flex-col shrink-0">
             {/* Chips de filtro — solo afectan esta lista */}
             <div className="flex gap-2 mb-3 shrink-0 flex-wrap">
               <FilterChip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}
@@ -185,7 +185,7 @@ function CalendarioPage() {
 
         {/* Notas fijas — 30% en escritorio, debajo de la lista en móvil */}
         {!isLoading && (
-          <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:flex lg:flex-col mt-4 lg:mt-0">
+          <div className="lg:w-[30%] lg:h-full lg:min-h-0 lg:flex lg:flex-col mt-4 lg:mt-0 shrink-0">
             <div className="flex items-center justify-between mb-2 shrink-0">
               <p className="text-[11px] lg:text-sm font-bold text-[#1A1A1A] uppercase tracking-wider">Notas</p>
               <button onClick={() => { setEditNote(null); setNoteContent(''); setNoteSheetOpen(true) }}
