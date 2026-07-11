@@ -5,13 +5,13 @@ import {
   Home, Clock,
   TrendingUp, Wrench, FileText, AlertTriangle,
   Zap, TrendingDown,
-  Receipt, RefreshCw,
+  Receipt, RefreshCw, StickyNote,
 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useMarcarExcedenteCobrado } from '@/hooks/useServices'
-import { useMarkInvoiceDone } from '@/hooks/useCalendar'
+import { useMarkInvoiceDone, useCalendar } from '@/hooks/useCalendar'
 import { formatCurrency, formatDate, currentMonthYear } from '@/lib/utils'
 import { MESES, ANIOS_DISPONIBLES } from '@/lib/dateOptions'
 
@@ -29,6 +29,8 @@ function DashboardPage() {
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useDashboard(month, year)
+  const { data: calendarData } = useCalendar(month, year)
+  const notes = calendarData?.notes ?? []
 
   function handleRefresh() {
     queryClient.invalidateQueries({ queryKey: ['dashboard', month, year] })
@@ -198,7 +200,8 @@ function DashboardPage() {
             {/* Recordatorios */}
             {(data.contracts_expiring.length > 0 ||
               data.invoices_pending.length > 0 ||
-              data.services_pendientes > 0) && (
+              data.services_pendientes > 0 ||
+              notes.length > 0) && (
               <Section title="Recordatorios" className="lg:col-span-2">
                 <div className="flex flex-col gap-2">
 
@@ -245,6 +248,19 @@ function DashboardPage() {
                           >
                             Marcar hecho ✓
                           </button>
+                        </div>
+                      ))}
+                    </AlertCard>
+                  )}
+
+                  {notes.length > 0 && (
+                    <AlertCard color="amber" icon={<StickyNote size={14} />}
+                      title="Notas fijas" count={notes.length}
+                      onClick={() => navigate({ to: '/calendario' })}>
+                      {notes.map(n => (
+                        <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-amber-100 last:border-0">
+                          <StickyNote size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                          <p className="text-xs text-amber-800 leading-snug line-clamp-2">{n.content}</p>
                         </div>
                       ))}
                     </AlertCard>
