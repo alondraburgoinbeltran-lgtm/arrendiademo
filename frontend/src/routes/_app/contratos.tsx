@@ -98,7 +98,7 @@ function ContratosPage() {
   return (
     <div>
       <PageHeader
-        title="Contratos"
+        title="CONTRATOS"
         action={
           <button onClick={openCreate} className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
             <Plus size={14} className="text-white" />
