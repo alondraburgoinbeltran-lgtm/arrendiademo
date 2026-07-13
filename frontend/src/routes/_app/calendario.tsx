@@ -103,7 +103,7 @@ function CalendarioPage() {
   return (
     <div>
       <PageHeader
-        title="Calendario"
+        title="CALENDARIO"
         action={
           <div className="flex items-end flex-wrap justify-end gap-2 lg:gap-3">
             <HeaderSelect label="Mes" value={month} onChange={setMonth} options={MESES} />
