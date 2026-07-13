@@ -40,7 +40,7 @@ function DashboardPage() {
   return (
     <div>
       <PageHeader
-        title="Dashboard"
+        title="DASHBOARD"
         subtitle="Resumen financiero y operativo"
         action={
           <div className="flex items-end gap-2 lg:gap-3">
