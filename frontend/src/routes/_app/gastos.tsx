@@ -118,8 +118,56 @@ function ExpensesPage() {
         }
       />
 
+      {/* KPIs + filtros — visibles en todos los tamaños */}
+      <div className="px-4 py-4 lg:px-8 xl:px-10 lg:py-6">
+        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto flex flex-col gap-3 lg:gap-5">
+
+          {/* KPIs */}
+          <div className="grid grid-cols-3 gap-2 lg:gap-4">
+            <KpiCard icon={<Wallet size={22} />} iconBg="bg-blue-50" iconColor="text-blue-600"
+              label="Total gastado" value={formatCurrency(totalGastos)}
+              caption={`${filtered.length} ${filtered.length === 1 ? 'gasto' : 'gastos'}`} />
+            <KpiCard icon={<CheckCircle2 size={22} />} iconBg="bg-green-50" iconColor="text-green-600"
+              label="Pagado" value={formatCurrency(totalPagado)}
+              caption={`${pctPagado}% del total`} />
+            <KpiCard icon={<Clock size={22} />} iconBg="bg-amber-50" iconColor="text-amber-500"
+              label="Pendiente" value={formatCurrency(totalPendiente)}
+              caption={`${pctPendiente}% del total`} />
+          </div>
+
+          {/* Filtros */}
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-end lg:gap-3 lg:flex-wrap">
+            <FilterSelect label="Concepto" icon={<Search size={15} />} value={conceptoFilter} onChange={setConceptoFilter}
+              options={[
+                { value: 'todos', label: 'Todos los conceptos' },
+                ...conceptosDisponibles.map(c => ({ value: c, label: c })),
+              ]} />
+            <FilterSelect label="Categoría" icon={<Tag size={15} />} value={categoriaFilter} onChange={setCategoriaFilter}
+              options={[
+                { value: 'todos', label: 'Todas las categorías' },
+                { value: 'fijo', label: 'Fijo' },
+                { value: 'no_fijo', label: 'No fijo' },
+              ]} />
+            <FilterSelect label="Estado" icon={<ShieldCheck size={15} />} value={estadoFilter} onChange={setEstadoFilter}
+              options={[
+                { value: 'todos', label: 'Todos los estados' },
+                { value: 'paid', label: 'Pagado' },
+                { value: 'pending', label: 'Pendiente' },
+              ]} />
+            <button
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              className="w-full lg:w-auto h-11 lg:h-12 flex items-center justify-center lg:justify-start gap-2 border border-[#E8E5DF] rounded-xl px-4 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors shrink-0"
+            >
+              <FilterX size={16} />
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Móvil — listas agrupadas */}
-      <div className="px-4 py-4 flex flex-col gap-4 lg:hidden">
+      <div className="px-4 pb-4 flex flex-col gap-4 lg:hidden">
         {isLoading && (
           <div className="py-16 text-center text-sm text-gray-400">Cargando...</div>
         )}
@@ -130,10 +178,9 @@ function ExpensesPage() {
           </div>
         )}
 
-        {!isLoading && expenses.length > 0 && (
-          <div className="bg-white border border-[#E8E5DF] rounded-xl px-4 py-3 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total gastos</span>
-            <span className="text-base font-bold text-[#1A1A1A]">{formatCurrency(totalGastos)}</span>
+        {!isLoading && expenses.length > 0 && filtered.length === 0 && (
+          <div className="py-12 text-center text-sm text-gray-400">
+            Sin resultados para estos filtros
           </div>
         )}
 
@@ -158,52 +205,9 @@ function ExpensesPage() {
         )}
       </div>
 
-      {/* Escritorio — KPIs + filtros + tabla */}
-      <div className="hidden lg:block lg:px-8 xl:px-10 lg:py-6">
-        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto flex flex-col gap-5">
-
-          {/* KPIs */}
-          <div className="grid grid-cols-3 gap-4">
-            <KpiCard icon={<Wallet size={22} />} iconBg="bg-blue-50" iconColor="text-blue-600"
-              label="Total gastado" value={formatCurrency(totalGastos)}
-              caption={`${filtered.length} ${filtered.length === 1 ? 'gasto' : 'gastos'}`} />
-            <KpiCard icon={<CheckCircle2 size={22} />} iconBg="bg-green-50" iconColor="text-green-600"
-              label="Pagado" value={formatCurrency(totalPagado)}
-              caption={`${pctPagado}% del total`} />
-            <KpiCard icon={<Clock size={22} />} iconBg="bg-amber-50" iconColor="text-amber-500"
-              label="Pendiente" value={formatCurrency(totalPendiente)}
-              caption={`${pctPendiente}% del total`} />
-          </div>
-
-          {/* Filtros */}
-          <div className="flex items-end gap-3 flex-wrap">
-            <FilterSelect label="Concepto" icon={<Search size={15} />} value={conceptoFilter} onChange={setConceptoFilter}
-              options={[
-                { value: 'todos', label: 'Todos los conceptos' },
-                ...conceptosDisponibles.map(c => ({ value: c, label: c })),
-              ]} />
-            <FilterSelect label="Categoría" icon={<Tag size={15} />} value={categoriaFilter} onChange={setCategoriaFilter}
-              options={[
-                { value: 'todos', label: 'Todas las categorías' },
-                { value: 'fijo', label: 'Fijo' },
-                { value: 'no_fijo', label: 'No fijo' },
-              ]} />
-            <FilterSelect label="Estado" icon={<ShieldCheck size={15} />} value={estadoFilter} onChange={setEstadoFilter}
-              options={[
-                { value: 'todos', label: 'Todos los estados' },
-                { value: 'paid', label: 'Pagado' },
-                { value: 'pending', label: 'Pendiente' },
-              ]} />
-            <button
-              onClick={clearFilters}
-              disabled={!hasActiveFilters}
-              className="h-11 lg:h-12 flex items-center gap-2 border border-[#E8E5DF] rounded-xl px-4 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors shrink-0"
-            >
-              <FilterX size={16} />
-              Limpiar filtros
-            </button>
-          </div>
-
+      {/* Escritorio — tabla */}
+      <div className="hidden lg:block lg:px-8 xl:px-10 lg:pb-6">
+        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
           {isLoading && <div className="py-16 text-center text-sm text-gray-400">Cargando...</div>}
           {!isLoading && expenses.length === 0 && (
             <div className="py-16 text-center text-sm text-gray-400 bg-white border border-[#E8E5DF] rounded-2xl">
@@ -223,6 +227,7 @@ function ExpensesPage() {
           )}
         </div>
       </div>
+
 
       <Sheet
         open={sheetOpen}
@@ -342,14 +347,14 @@ function KpiCard({ icon, iconBg, iconColor, label, value, caption }: {
   label: string; value: string; caption: string
 }) {
   return (
-    <div className="bg-white border border-[#E8E5DF] rounded-2xl p-5 lg:p-6 flex items-center gap-4 transition-all duration-200 hover:-translate-y-[1px]">
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}>
+    <div className="bg-white border border-[#E8E5DF] rounded-xl lg:rounded-2xl p-2.5 lg:p-6 flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-4 transition-all duration-200 lg:hover:-translate-y-[1px]">
+      <div className={`w-8 h-8 lg:w-14 lg:h-14 rounded-lg lg:rounded-2xl flex items-center justify-center shrink-0 [&>svg]:w-4 [&>svg]:h-4 lg:[&>svg]:w-[22px] lg:[&>svg]:h-[22px] ${iconBg} ${iconColor}`}>
         {icon}
       </div>
-      <div className="min-w-0">
-        <p className="text-sm text-gray-500 font-medium truncate">{label}</p>
-        <p className="text-2xl lg:text-[28px] font-bold text-[#1A1A1A] leading-tight mt-0.5 truncate">{value}</p>
-        <p className="text-xs text-gray-400 mt-0.5 truncate">{caption}</p>
+      <div className="min-w-0 w-full">
+        <p className="text-[10px] lg:text-sm text-gray-500 font-medium truncate">{label}</p>
+        <p className="text-sm lg:text-[28px] font-bold text-[#1A1A1A] leading-tight mt-0.5 truncate">{value}</p>
+        <p className="text-[9px] lg:text-xs text-gray-400 mt-0.5 truncate">{caption}</p>
       </div>
     </div>
   )
@@ -361,7 +366,7 @@ function FilterSelect({ label, icon, value, onChange, options }: {
   options: { value: string; label: string }[]
 }) {
   return (
-    <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+    <div className="flex flex-col gap-1.5 w-full lg:flex-1 lg:min-w-[200px]">
       <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide px-0.5">{label}</span>
       <div className="relative">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">{icon}</span>
