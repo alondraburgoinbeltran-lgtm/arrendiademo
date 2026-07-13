@@ -320,9 +320,6 @@ function ServiciosPage() {
                 ...properties.map(p => ({ value: String(p.id), label: `${p.name}${p.number ? ` #${p.number}` : ''}` })),
               ]} />
 
-            <FilterSelect label="Periodo" value="este_mes" onChange={() => {}}
-              options={[{ value: 'este_mes', label: 'Este mes' }]} />
-
             <button
               onClick={clearFilters}
               disabled={!hasActiveFilters}
