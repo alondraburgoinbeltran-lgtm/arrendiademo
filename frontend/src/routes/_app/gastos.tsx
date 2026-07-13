@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import {
+  Plus, Pencil, Trash2, RefreshCw,
+  Wallet, CheckCircle2, Clock, Search, Tag, ShieldCheck, ChevronDown, FilterX,
+} from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { HeaderSelect } from '@/components/ui/HeaderSelect'
 import { Sheet } from '@/components/ui/Sheet'
@@ -35,6 +38,30 @@ function ExpensesPage() {
   const updateMutation = useUpdateExpense()
   const deleteMutation = useDeleteExpense()
 
+  const [conceptoFilter, setConceptoFilter]   = useState('todos')
+  const [categoriaFilter, setCategoriaFilter] = useState('todos')
+  const [estadoFilter, setEstadoFilter]       = useState('todos')
+
+  const conceptosDisponibles = useMemo(() =>
+    Array.from(new Set(expenses.map(e => e.type))).sort()
+  , [expenses])
+
+  const filtered = useMemo(() => expenses.filter(e => {
+    if (conceptoFilter !== 'todos' && e.type !== conceptoFilter) return false
+    if (categoriaFilter === 'fijo' && e.is_recurring !== 1) return false
+    if (categoriaFilter === 'no_fijo' && e.is_recurring !== 0) return false
+    if (estadoFilter !== 'todos' && e.status !== estadoFilter) return false
+    return true
+  }), [expenses, conceptoFilter, categoriaFilter, estadoFilter])
+
+  const hasActiveFilters = conceptoFilter !== 'todos' || categoriaFilter !== 'todos' || estadoFilter !== 'todos'
+
+  function clearFilters() {
+    setConceptoFilter('todos')
+    setCategoriaFilter('todos')
+    setEstadoFilter('todos')
+  }
+
   function openNew() {
     setEditing(null)
     setForm({ ...EMPTY_FORM, month, year })
@@ -61,9 +88,13 @@ function ExpensesPage() {
     setSheetOpen(false)
   }
 
-  const fijos   = expenses.filter(e => e.is_recurring === 1)
-  const noFijos = expenses.filter(e => e.is_recurring === 0)
-  const totalGastos = expenses.reduce((s, e) => s + e.amount, 0)
+  const fijos   = filtered.filter(e => e.is_recurring === 1)
+  const noFijos = filtered.filter(e => e.is_recurring === 0)
+  const totalGastos = filtered.reduce((s, e) => s + e.amount, 0)
+  const totalPagado    = filtered.filter(e => e.status === 'paid').reduce((s, e) => s + e.amount, 0)
+  const totalPendiente = filtered.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
+  const pctPagado    = totalGastos > 0 ? Math.round((totalPagado / totalGastos) * 100) : 0
+  const pctPendiente = totalGastos > 0 ? Math.round((totalPendiente / totalGastos) * 100) : 0
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
@@ -127,17 +158,65 @@ function ExpensesPage() {
         )}
       </div>
 
-      {/* Escritorio — tabla */}
+      {/* Escritorio — KPIs + filtros + tabla */}
       <div className="hidden lg:block lg:px-8 xl:px-10 lg:py-6">
-        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto">
+        <div className="lg:max-w-[1440px] xl:max-w-[1600px] lg:mx-auto flex flex-col gap-5">
+
+          {/* KPIs */}
+          <div className="grid grid-cols-3 gap-4">
+            <KpiCard icon={<Wallet size={22} />} iconBg="bg-blue-50" iconColor="text-blue-600"
+              label="Total gastado" value={formatCurrency(totalGastos)}
+              caption={`${filtered.length} ${filtered.length === 1 ? 'gasto' : 'gastos'}`} />
+            <KpiCard icon={<CheckCircle2 size={22} />} iconBg="bg-green-50" iconColor="text-green-600"
+              label="Pagado" value={formatCurrency(totalPagado)}
+              caption={`${pctPagado}% del total`} />
+            <KpiCard icon={<Clock size={22} />} iconBg="bg-amber-50" iconColor="text-amber-500"
+              label="Pendiente" value={formatCurrency(totalPendiente)}
+              caption={`${pctPendiente}% del total`} />
+          </div>
+
+          {/* Filtros */}
+          <div className="flex items-end gap-3 flex-wrap">
+            <FilterSelect label="Concepto" icon={<Search size={15} />} value={conceptoFilter} onChange={setConceptoFilter}
+              options={[
+                { value: 'todos', label: 'Todos los conceptos' },
+                ...conceptosDisponibles.map(c => ({ value: c, label: c })),
+              ]} />
+            <FilterSelect label="Categoría" icon={<Tag size={15} />} value={categoriaFilter} onChange={setCategoriaFilter}
+              options={[
+                { value: 'todos', label: 'Todas las categorías' },
+                { value: 'fijo', label: 'Fijo' },
+                { value: 'no_fijo', label: 'No fijo' },
+              ]} />
+            <FilterSelect label="Estado" icon={<ShieldCheck size={15} />} value={estadoFilter} onChange={setEstadoFilter}
+              options={[
+                { value: 'todos', label: 'Todos los estados' },
+                { value: 'paid', label: 'Pagado' },
+                { value: 'pending', label: 'Pendiente' },
+              ]} />
+            <button
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              className="h-11 lg:h-12 flex items-center gap-2 border border-[#E8E5DF] rounded-xl px-4 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors shrink-0"
+            >
+              <FilterX size={16} />
+              Limpiar filtros
+            </button>
+          </div>
+
           {isLoading && <div className="py-16 text-center text-sm text-gray-400">Cargando...</div>}
           {!isLoading && expenses.length === 0 && (
             <div className="py-16 text-center text-sm text-gray-400 bg-white border border-[#E8E5DF] rounded-2xl">
               Sin gastos registrados este mes
             </div>
           )}
-          {!isLoading && expenses.length > 0 && (
-            <ExpenseTable expenses={expenses} total={totalGastos}
+          {!isLoading && expenses.length > 0 && filtered.length === 0 && (
+            <div className="py-16 text-center text-sm text-gray-400 bg-white border border-[#E8E5DF] rounded-2xl">
+              Sin resultados para estos filtros
+            </div>
+          )}
+          {!isLoading && filtered.length > 0 && (
+            <ExpenseTable expenses={filtered} total={totalGastos}
               onEdit={openEdit}
               onDelete={e => setConfirmId(e.id)}
             />
@@ -254,6 +333,47 @@ function ExpensesPage() {
         }}
         onCancel={() => setConfirmId(null)}
       />
+    </div>
+  )
+}
+
+function KpiCard({ icon, iconBg, iconColor, label, value, caption }: {
+  icon: React.ReactNode; iconBg: string; iconColor: string
+  label: string; value: string; caption: string
+}) {
+  return (
+    <div className="bg-white border border-[#E8E5DF] rounded-2xl p-5 lg:p-6 flex items-center gap-4 transition-all duration-200 hover:-translate-y-[1px]">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm text-gray-500 font-medium truncate">{label}</p>
+        <p className="text-2xl lg:text-[28px] font-bold text-[#1A1A1A] leading-tight mt-0.5 truncate">{value}</p>
+        <p className="text-xs text-gray-400 mt-0.5 truncate">{caption}</p>
+      </div>
+    </div>
+  )
+}
+
+function FilterSelect({ label, icon, value, onChange, options }: {
+  label: string; icon: React.ReactNode
+  value: string; onChange: (value: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide px-0.5">{label}</span>
+      <div className="relative">
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">{icon}</span>
+        <select
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full h-11 lg:h-12 bg-white border border-[#E8E5DF] rounded-xl pl-10 pr-9 text-sm font-medium text-[#1A1A1A] appearance-none cursor-pointer transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-primary-300"
+        >
+          {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      </div>
     </div>
   )
 }
