@@ -123,7 +123,7 @@ function PropiedadesPage() {
   return (
     <div>
       <PageHeader
-        title="Propiedades"
+        title="PROPIEDADES"
         action={
           <div className="flex items-center flex-wrap justify-end gap-2 lg:gap-3">
             <button
